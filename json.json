@@ -1,0 +1,21 @@
+[{
+  "start": "00:00:00",
+  "title": "foo",
+  "href": "http://podlove.org",
+  "image":""
+},{
+  "start": "00:01:00",
+  "title": "lorem",
+  "href": "https://github.com/podlove/",
+  "image":"samples/coverimage-red.png"
+},{
+  "start": "00:02:30",
+  "title": "ipsum",
+  "href": "https://github.com/shownotes/",
+  "image":"samples/coverimage-green.png"
+},{
+  "start": "00:03:00",
+  "title": "end",
+  "href": "",
+  "image":"samples/coverimage-blue.png"
+}]
