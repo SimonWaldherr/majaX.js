@@ -13,6 +13,7 @@
   <div id="json"></div>
 </body>
 <script>
-  majaX({method:'POST',url:'http://cdn.simon.waldherr.eu/projects/majaX/json.json'}, function(json) {document.getElementById('json').innerHTML = JSON.stringify(json)});
+  majaX({method:'POST',url:'./json.json'}, function(json) {document.getElementById('json').innerHTML = JSON.stringify(json)});
+  majaX({url:'./xml.xml'}, function(xml) {document.getElementById('xml').innerHTML = JSON.stringify(xml)});
 </script>
 </html>

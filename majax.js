@@ -6,12 +6,12 @@
  * http://opensource.org/licenses/MIT
  *
  * Github:  https://github.com/simonwaldherr/majaX.js/
- * Version: 0.1.0
+ * Version: 0.1.2
  */
 
 /*jslint browser: true, white: true, plusplus: true, indent: 2 */
-/*global escapeHtmlEntities, console */
-/*exported osfParser, osfExport, osfBuildTags */
+/*global ActiveXObject */
+/*exported majaX */
 
 function majaX(data, successcallback, errorcallback) {
   "use strict";
@@ -63,9 +63,6 @@ function majaX(data, successcallback, errorcallback) {
   port     = data.port === undefined ? urlparts.clean.port === undefined ? '80' : urlparts.clean.port : data.port;
   type     = data.type === undefined ? urlparts.clean.fileextension === undefined ? 'plain' : urlparts.clean.fileextension : data.type;
   mimetype = data.mimetype === undefined ? mimes[urlparts.clean.fileextension] === undefined ? 'text/plain' : mimes[urlparts.clean.fileextension] : data.mimetype;
-  faildata = data.faildata;
-  
-  console.log({'url':url,'method':method,'port':port,'type':type,'mime':mimetype});
   
   function escapeHtmlEntities (text) {
       return text.replace(/[\u00A0-\u2666<>\&]/g, function(c) {
@@ -78,7 +75,7 @@ function majaX(data, successcallback, errorcallback) {
     return string.replace(re, '');
   }
   function returnChilds(element, node, deep) {
-    var i, ii, obj, key, returnArray = [], deepstr = '', childs = node.childNodes.length;
+    var i, ii, obj, key, plaintext, returnArray = [], deepstr = '', childs = node.childNodes.length;
     ii = 0;
     for(i = 0; i < childs; i++) {
       if(node.childNodes[i].localName !== null) {
@@ -108,18 +105,24 @@ function majaX(data, successcallback, errorcallback) {
   ajax = (window.ActiveXObject) ? new ActiveXObject("Microsoft.XMLHTTP") : (XMLHttpRequest && new XMLHttpRequest()) || null;
    ajaxTimeout = window.setTimeout(function () {
      ajax.abort();
-     console.log("AJAX Timeout Error");
-     alert('AJAX Timeout Error');
    }, 6000);
    ajax.onreadystatechange = function () {
-   
      if (ajax.readyState === 4) {
        if (ajax.status === 200) {
          clearTimeout(ajaxTimeout);
          if (ajax.status !== 200) {
-           successcallback(ajax.status, ajax);
+           errorcallback(ajax.status, ajax);
          } else {
-           successcallback(ajax.responseText, ajax);
+           type = type.toLowerCase();
+           if(type === 'json') {
+             successcallback(JSON.parse(ajax.responseText), ajax);
+           } else if(type === 'xml') {
+             var xmlroot = document.createElement('div'), foo = {};
+             xmlroot.innerHTML = ajax.responseText;
+             successcallback(returnChilds(foo, xmlroot, 1), ajax);
+           } else {
+             successcallback(ajax.responseText, ajax);
+           }
          }
        }
      }
