@@ -6,7 +6,7 @@
  * http://opensource.org/licenses/MIT
  *
  * Github:  https://github.com/simonwaldherr/majaX.js/
- * Version: 0.1.3
+ * Version: 0.1.4
  */
 /*jslint browser: true, white: true, plusplus: true, indent: 2, regexp: true, forin: true */
 /*global ActiveXObject */
@@ -85,8 +85,8 @@ function majaX(data, successcallback, errorcallback) {
 
   function escapeHtmlEntities(text) {
     return text.replace(/[\u00A0-\u2666<>\&]/g, function (c) {
-      return '&' + (escapeHtmlEntities.entityTable[c.charCodeAt(0)] || '#' + c.charCodeAt(0)) + ';';
-    });
+        return '&' + (escapeHtmlEntities.entityTable[c.charCodeAt(0)] || '#' + c.charCodeAt(0)) + ';';
+      });
   }
   escapeHtmlEntities.entityTable = {
     34: 'quot',
@@ -349,39 +349,86 @@ function majaX(data, successcallback, errorcallback) {
     return string.replace(re, '');
   }
 
-  function returnChilds(element, node, deep) {
-    var i, ii, obj, key, plaintext, returnArray = [],
-      childs = node.childNodes.length;
-    ii = 0;
-    for (i = 0; i < childs; i++) {
-      if (node.childNodes[i].localName !== null) {
-        element[ii] = {};
-        for (key in node.childNodes[i]) {
-          obj = node.childNodes[i][key];
-          if ((typeof obj === 'string') || (typeof obj === 'number')) {
-            if ((key !== 'accessKey') && (key !== 'baseURI') && (key !== 'className') && (key !== 'contentEditable') && (key !== 'dir') && (key !== 'namespaceURI') && (obj !== "") && (key !== key.toUpperCase()) && (obj !== 0) && (key !== 'childs') && (key !== 'textContent') && (key !== 'nodeType') && (key !== 'tabIndex') && (key !== 'innerHTML') && (key !== 'outerHTML')) {
-              element[ii][key] = obj;
-            } else if ((key === 'innerHTML') || (key === 'outerHTML')) {
-              element[ii][key] = escapeHtmlEntities(obj);
+  function getXMLasObject(xmlstring) {
+    var xmlroot = document.createElement('div'),
+      foo = {};
+    xmlroot.innerHTML = xmlstring;
+
+    function returnChilds(element, node, deep) {
+      var i, ii, obj, key, plaintext, returnArray = [],
+        childs = node.childNodes.length;
+      ii = 0;
+      for (i = 0; i < childs; i++) {
+        if (node.childNodes[i].localName !== null) {
+          element[ii] = {};
+          for (key in node.childNodes[i]) {
+            obj = node.childNodes[i][key];
+            if ((typeof obj === 'string') || (typeof obj === 'number')) {
+              if ((key !== 'accessKey') && (key !== 'baseURI') && (key !== 'className') && (key !== 'contentEditable') && (key !== 'dir') && (key !== 'namespaceURI') && (obj !== "") && (key !== key.toUpperCase()) && (obj !== 0) && (key !== 'childs') && (key !== 'textContent') && (key !== 'nodeType') && (key !== 'tabIndex') && (key !== 'innerHTML') && (key !== 'outerHTML')) {
+                element[ii][key] = obj;
+              } else if ((key === 'innerHTML') || (key === 'outerHTML')) {
+                element[ii][key] = escapeHtmlEntities(obj);
+              }
             }
           }
+          plaintext = getText(node.childNodes[i].innerHTML).trim();
+          if (plaintext !== "") {
+            element[ii].textContent = plaintext;
+          }
+          if (node.childNodes[i].childNodes.length > 1) {
+            element[ii].childs = returnChilds(returnArray, node.childNodes[i], deep + 1);
+          }
+          ii++;
         }
-        plaintext = getText(node.childNodes[i].innerHTML).trim();
-        if (plaintext !== "") {
-          element[ii].textContent = plaintext;
-        }
-        if (node.childNodes[i].childNodes.length > 1) {
-          element[ii].childs = returnChilds(returnArray, node.childNodes[i], deep + 1);
-        }
-        ii++;
       }
+      return element;
     }
-    return element;
+    return returnChilds(foo, xmlroot, 1);
   }
+
+  function getCSVasArray(csvstring) {
+    var regexCSV, arrayCSV, arrMatches, strMatchedDelimiter, strMatchedValue, strDelimiter = ';';
+
+    function cleanArray(actual) {
+      var newArray = [], clean, i = 0;
+      for (i = 0; i < actual.length; i++) {
+        if ((typeof actual[i] === 'string') || (typeof actual[i] === 'number')) {
+          newArray.push(actual[i]);
+        } else if (typeof actual[i] === 'object') {
+          clean = cleanArray(actual[i]);
+          if (clean[0] !== '') {
+            newArray.push(cleanArray(actual[i]));
+          }
+        }
+      }
+      return newArray;
+    }
+
+    regexCSV = new RegExp(("(\\" + strDelimiter + "|\\r?\\n|\\r|^)" + "(?:\"([^\"]*(?:\"\"[^\"]*)*)\"|" + "([^\"\\" + strDelimiter + "\\r\\n]*))"), "gi");
+    arrayCSV = [[]];
+    arrMatches = regexCSV.exec(csvstring);
+
+    while (arrMatches) {
+      strMatchedDelimiter = arrMatches[1];
+      if (strMatchedDelimiter.length && (strMatchedDelimiter !== strDelimiter)) {
+        arrayCSV.push([]);
+      }
+      if (arrMatches[2]) {
+        strMatchedValue = arrMatches[2].replace(new RegExp("\"\"", "g"), "\"");
+      } else {
+        strMatchedValue = arrMatches[3];
+      }
+      arrayCSV[arrayCSV.length - 1].push(strMatchedValue);
+      arrMatches = regexCSV.exec(csvstring);
+    }
+    return cleanArray(arrayCSV);
+  }
+
   ajax = (window.ActiveXObject) ? new ActiveXObject("Microsoft.XMLHTTP") : (XMLHttpRequest && new XMLHttpRequest()) || null;
   ajaxTimeout = window.setTimeout(function () {
-    ajax.abort();
-  }, 6000);
+      ajax.abort();
+    }, 6000);
+
   ajax.onreadystatechange = function () {
     if (ajax.readyState === 4) {
       if (ajax.status === 200) {
@@ -393,10 +440,9 @@ function majaX(data, successcallback, errorcallback) {
           if (type === 'json') {
             successcallback(JSON.parse(ajax.responseText), ajax);
           } else if (type === 'xml') {
-            var xmlroot = document.createElement('div'),
-              foo = {};
-            xmlroot.innerHTML = ajax.responseText;
-            successcallback(returnChilds(foo, xmlroot, 1), ajax);
+            successcallback(getXMLasObject(ajax.responseText), ajax);
+          } else if (type === 'csv') {
+            successcallback(getCSVasArray(ajax.responseText), ajax);
           } else {
             successcallback(ajax.responseText, ajax);
           }
@@ -404,6 +450,7 @@ function majaX(data, successcallback, errorcallback) {
       }
     }
   };
+
   ajax.open(method, url, true);
   ajax.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
   ajax.send();

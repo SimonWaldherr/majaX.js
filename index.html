@@ -2,20 +2,27 @@
 <head>
   <meta charset="utf-8">
   <title>majaX.js</title>
-  
   <link href="style.css" rel="stylesheet" type="text/css">
   <script src="./majax.js"></script>
 </head>
 <body>
-  
-  
-  <div id="xml"></div><hr/>
-  <div id="json"></div><hr/>
-  <div id="debug"></div>
+  <h1>majaX.js</h1>
+  <h2>json</h2>
+  <div class="return" id="json"></div><hr/>
+  <h2>xml</h2>
+  <div class="return" id="xml"></div><hr/>
+  <h2>csv</h2>
+  <div class="return" id="csv"></div><hr/>
+  <h2>plain</h2>
+  <div class="return" id="plain"></div><hr/>
+  <h2>debug</h2>
+  <div class="return" id="debug"></div>
 </body>
 <script>
-  majaX({url:'./json.json'}, function(json) {document.getElementById('json').innerHTML = JSON.stringify(json)});
-  majaX({url:'./xml.xml'}, function(xml) {document.getElementById('xml').innerHTML = JSON.stringify(xml)});
-  document.getElementById('debug').innerHTML = JSON.stringify(majaX({url:'./xml.xml', method:'DEBUG'}));
+  document.getElementById('debug').innerHTML = JSON.stringify(majaX({url:'http://simonwaldherr.github.io:80/majaX.js/content/xml.xml', method:'DEBUG'}), null, '  ');
+  majaX({url:'./content/json.json'}, function(json) {document.getElementById('json').innerHTML = JSON.stringify(json, null, '  ')});
+  majaX({url:'./content/xml.xml'}, function(xml) {document.getElementById('xml').innerHTML = JSON.stringify(xml, null, '  ')});
+  majaX({url:'./content/csv.csv'}, function(csv) {document.getElementById('csv').innerHTML = JSON.stringify(csv, null, '  ')});
+  majaX({url:'./content/plain.txt'}, function(plain) {document.getElementById('plain').innerHTML = JSON.stringify(plain)});
 </script>
 </html>
