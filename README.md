@@ -8,7 +8,7 @@ make AJAX Requests and parse return values
 ##about
 
 License: MIT  
-Version: 0.1.3  
+Version: 0.1.5  
 Date: 5.2013  
 
 ##demo

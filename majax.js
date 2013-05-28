@@ -6,15 +6,16 @@
  * http://opensource.org/licenses/MIT
  *
  * Github:  https://github.com/simonwaldherr/majaX.js/
- * Version: 0.1.4
+ * Version: 0.1.5
  */
+
 /*jslint browser: true, white: true, plusplus: true, indent: 2, regexp: true, forin: true */
 /*global ActiveXObject */
 /*exported majaX */
 
 function majaX(data, successcallback, errorcallback) {
   "use strict";
-  var url, method, port, type, faildata, ajax, ajaxTimeout, mimes, mimetype, regex, urlparts = {}, i = 0;
+  var url, method, port, type, faildata, ajax, ajaxTimeout, mimes, mimetype, senddata, sendkeys, sendstring, regex, urlparts = {}, i = 0;
 
   function countChars(string, split) {
     string = string.split(split);
@@ -28,14 +29,15 @@ function majaX(data, successcallback, errorcallback) {
     return false;
   }
 
-  regex = /((http[s]?:\/\/)?([\.:\/]+)?([^\.:\/]+)?)/gm;
+  regex = /((http[s]?:\/\/)?([\.:\/?&]+)?([^\.:\/?&]+)?)/gm;
   urlparts.regex = data.url.match(regex);
   urlparts.clean = {
     'protocol': '',
     'domain': '',
     'port': '',
     'path': '',
-    'fileextension': ''
+    'fileextension': '',
+    'query': ''
   };
   for (i = 0; i < urlparts.regex.length; i++) {
     if (countChars(urlparts.regex[i], '://') === 1) {
@@ -45,8 +47,10 @@ function majaX(data, successcallback, errorcallback) {
       urlparts.clean.domain += urlparts.regex[i] === undefined ? false : urlparts.regex[i];
     } else if ((countChars(urlparts.regex[i], ':') === 1) && (urlparts.clean.path === '')) {
       urlparts.clean.port = urlparts.regex[i] === undefined ? false : urlparts.regex[i].split(':')[1];
-    } else {
+    } else if ((countChars(urlparts.regex[i], '?') === 0) && (countChars(urlparts.regex[i], '&') === 0)) {
       urlparts.clean.path += urlparts.regex[i] === undefined ? false : urlparts.regex[i];
+    } else {
+      urlparts.clean.query += urlparts.regex[i] === undefined ? false : urlparts.regex[i];
     }
   }
   urlparts.clean.fileextension = urlparts.clean.path.split('.')[urlparts.clean.path.split('.').length - 1];
@@ -70,7 +74,8 @@ function majaX(data, successcallback, errorcallback) {
   port = data.port === undefined ? urlparts.clean.port === undefined ? '80' : urlparts.clean.port : data.port;
   type = data.type === undefined ? urlparts.clean.fileextension === undefined ? 'plain' : urlparts.clean.fileextension : data.type;
   mimetype = data.mimetype === undefined ? mimes[urlparts.clean.fileextension] === undefined ? 'text/plain' : mimes[urlparts.clean.fileextension] : data.mimetype;
-  faildata = data.faildata;
+  senddata = data.data === undefined ? false : data.data;
+  faildata = data.faildata === undefined ? false : data.faildata;
 
   if (method === 'DEBUG') {
     return {
@@ -451,7 +456,36 @@ function majaX(data, successcallback, errorcallback) {
     }
   };
 
-  ajax.open(method, url, true);
-  ajax.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
-  ajax.send();
+  i = 0;
+  sendstring = '';
+  if (senddata !== false) {
+    for (sendkeys in senddata) {
+      if (i !== 0) {
+        sendstring += '&';
+      }
+      sendstring += sendkeys + '=' + senddata[sendkeys];
+      i++;
+    }
+  }
+
+  if (method === 'GET') {
+    if (sendstring !== '') {
+      if (urlparts.clean.query !== '') {
+        url = url + '&' + sendstring;
+      } else {
+        url = url + '?' + sendstring;
+      }
+    }
+    ajax.open('GET', url, true);
+    ajax.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+    ajax.send();
+  } else if (method === 'POST') {
+    ajax.open('POST', url, true);
+    ajax.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+    ajax.send(sendstring);
+  } else {
+    ajax.open(method, url, true);
+    ajax.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+    ajax.send();
+  }
 }
