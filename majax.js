@@ -6,7 +6,7 @@
  * http://opensource.org/licenses/MIT
  *
  * Github:  https://github.com/simonwaldherr/majaX.js/
- * Version: 0.1.5
+ * Version: 0.1.6
  */
 
 /*jslint browser: true, white: true, plusplus: true, indent: 2, regexp: true, forin: true */
@@ -53,7 +53,11 @@ function majaX(data, successcallback, errorcallback) {
       urlparts.clean.query += urlparts.regex[i] === undefined ? false : urlparts.regex[i];
     }
   }
-  urlparts.clean.fileextension = urlparts.clean.path.split('.')[urlparts.clean.path.split('.').length - 1];
+  if(urlparts.clean.query === '') {
+    urlparts.clean.fileextension = urlparts.clean.path.split('.')[urlparts.clean.path.split('.').length - 1];
+  } else {
+    urlparts.clean.fileextension = urlparts.clean.path.split('.')[urlparts.clean.path.split('.').length - 2];
+  }
 
   mimes = {
     'txt': 'text/plain',
