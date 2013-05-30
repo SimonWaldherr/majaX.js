@@ -6,7 +6,7 @@
  * http://opensource.org/licenses/MIT
  *
  * Github:  https://github.com/simonwaldherr/majaX.js/
- * Version: 0.1.6
+ * Version: 0.1.7
  */
 
 /*jslint browser: true, white: true, plusplus: true, indent: 2, regexp: true, forin: true */
@@ -53,7 +53,7 @@ function majaX(data, successcallback, errorcallback) {
       urlparts.clean.query += urlparts.regex[i] === undefined ? false : urlparts.regex[i];
     }
   }
-  if(urlparts.clean.query === '') {
+  if (urlparts.clean.query === '') {
     urlparts.clean.fileextension = urlparts.clean.path.split('.')[urlparts.clean.path.split('.').length - 1];
   } else {
     urlparts.clean.fileextension = urlparts.clean.path.split('.')[urlparts.clean.path.split('.').length - 2];
@@ -399,7 +399,8 @@ function majaX(data, successcallback, errorcallback) {
     var regexCSV, arrayCSV, arrMatches, strMatchedDelimiter, strMatchedValue, strDelimiter = ';';
 
     function cleanArray(actual) {
-      var newArray = [], clean, i = 0;
+      var newArray = [],
+        clean, i = 0;
       for (i = 0; i < actual.length; i++) {
         if ((typeof actual[i] === 'string') || (typeof actual[i] === 'number')) {
           newArray.push(actual[i]);
@@ -449,9 +450,8 @@ function majaX(data, successcallback, errorcallback) {
           if (method === 'API') {
             if (urlparts.clean.domain === 'github.com') {
               var jsoncontent = JSON.parse(ajax.responseText);
-              console.log(jsoncontent);
               if (jsoncontent.content !== undefined) {
-                jsoncontent.content = window.atob(jsoncontent.content.replace(/\n/gmi,''));
+                jsoncontent.content = window.atob(jsoncontent.content.replace(/\n/gmi, ''));
                 successcallback(jsoncontent, ajax);
               } else {
                 successcallback(JSON.parse(ajax.responseText), ajax);
@@ -493,7 +493,7 @@ function majaX(data, successcallback, errorcallback) {
         ajax.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
         ajax.send();
       } else {
-        ajax.open('GET', 'https://api.github.com/repos/' + urlparts.clean.path.split('/')[1] + '/' + urlparts.clean.path.split('/')[2] + '/contents/' + urlparts.clean.path.split('/',4)[3], true);
+        ajax.open('GET', 'https://api.github.com/repos/' + urlparts.clean.path.split('/')[1] + '/' + urlparts.clean.path.split('/')[2] + '/contents/' + urlparts.clean.path.split('/', 4)[3], true);
         ajax.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
         ajax.send();
       }
