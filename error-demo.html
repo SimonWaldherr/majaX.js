@@ -1,0 +1,18 @@
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>majaX.js</title>
+  <link href="style.css" rel="stylesheet" type="text/css">
+  <script src="./majax.js"></script>
+</head>
+<body>
+  <h1>majaX.js</h1>
+  <h2>Error Demo</h2>
+  <div id="Tests">
+    <ul>
+      <li><a href="#" onclick="majaX({url:'https://api.github.com/repos/SimonWaldherr/majaX.js/contents/content/404.txt'}, function() {alert('200');}, function(fail, ajax) {console.log(ajax); alert(ajax.status+' '+ajax.statusText);}); return false;">404 Not Found</a></li>
+      <!--<li><a href="#" onclick="majaX({url:'https://api.github.com/repos/SimonWaldherr/majaX.js/contents/', method:'POST'}, function() {alert('200');}, function(fail, ajax) {console.log(ajax); alert(ajax.status+' '+ajax.statusText);}); return false;">405 Method Not Allowed</a></li>-->
+    </ul>
+  </div>
+</body>
+</html>

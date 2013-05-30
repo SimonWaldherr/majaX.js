@@ -6,7 +6,7 @@
  * http://opensource.org/licenses/MIT
  *
  * Github:  https://github.com/simonwaldherr/majaX.js/
- * Version: 0.1.7
+ * Version: 0.1.8
  */
 
 /*jslint browser: true, white: true, plusplus: true, indent: 2, regexp: true, forin: true */
@@ -441,32 +441,30 @@ function majaX(data, successcallback, errorcallback) {
 
   ajax.onreadystatechange = function () {
     if (ajax.readyState === 4) {
-      if (ajax.status === 200) {
+      if (ajax.status !== 200) {
+        errorcallback(faildata, ajax);
+      } else {
         clearTimeout(ajaxTimeout);
-        if (ajax.status !== 200) {
-          errorcallback(faildata, ajax);
-        } else {
-          type = type.toLowerCase();
-          if (method === 'API') {
-            if (urlparts.clean.domain === 'github.com') {
-              var jsoncontent = JSON.parse(ajax.responseText);
-              if (jsoncontent.content !== undefined) {
-                jsoncontent.content = window.atob(jsoncontent.content.replace(/\n/gmi, ''));
-                successcallback(jsoncontent, ajax);
-              } else {
-                successcallback(JSON.parse(ajax.responseText), ajax);
-              }
-            }
-          } else {
-            if (type === 'json') {
-              successcallback(JSON.parse(ajax.responseText), ajax);
-            } else if (type === 'xml') {
-              successcallback(getXMLasObject(ajax.responseText), ajax);
-            } else if (type === 'csv') {
-              successcallback(getCSVasArray(ajax.responseText), ajax);
+        type = type.toLowerCase();
+        if (method === 'API') {
+          if (urlparts.clean.domain === 'github.com') {
+            var jsoncontent = JSON.parse(ajax.responseText);
+            if (jsoncontent.content !== undefined) {
+              jsoncontent.content = window.atob(jsoncontent.content.replace(/\n/gmi, ''));
+              successcallback(jsoncontent, ajax);
             } else {
-              successcallback(ajax.responseText, ajax);
+              successcallback(JSON.parse(ajax.responseText), ajax);
             }
+          }
+        } else {
+          if (type === 'json') {
+            successcallback(JSON.parse(ajax.responseText), ajax);
+          } else if (type === 'xml') {
+            successcallback(getXMLasObject(ajax.responseText), ajax);
+          } else if (type === 'csv') {
+            successcallback(getCSVasArray(ajax.responseText), ajax);
+          } else {
+            successcallback(ajax.responseText, ajax);
           }
         }
       }

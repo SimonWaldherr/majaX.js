@@ -8,12 +8,16 @@ make AJAX Requests and parse return values
 ##about
 
 License: MIT  
-Version: 0.1.7  
+Version: 0.1.8  
 Date: 5.2013  
 
 ##demo
 
-Test this code on the associated github page [simonwaldherr.github.io/majaX.js/](http://simonwaldherr.github.io/majaX.js/).
+Test this code on the associated github page:
+
+* [Type Tests](http://simonwaldherr.github.io/majaX.js/typetests.html)
+* [GH API Demo](http://simonwaldherr.github.io/majaX.js/gh-demo.html)
+* [Error Demo](http://simonwaldherr.github.io/majaX.js/error-demo.html)
 
 ##contact
 
