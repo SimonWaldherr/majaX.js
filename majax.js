@@ -6,16 +6,18 @@
  * http://opensource.org/licenses/MIT
  *
  * Github:  https://github.com/simonwaldherr/majaX.js/
- * Version: 0.1.8
+ * Version: 0.1.9
  */
 
-/*jslint browser: true, white: true, plusplus: true, indent: 2, regexp: true, forin: true */
-/*global ActiveXObject */
+/*jslint browser: true, white: true, plusplus: true, indent: 2, bitwise: true, regexp: true, forin: true */
+/*global ActiveXObject, window */
 /*exported majaX */
 
 function majaX(data, successcallback, errorcallback) {
   "use strict";
-  var url, method, port, type, faildata, ajax, ajaxTimeout, mimes, mimetype, senddata, sendkeys, sendstring, regex, urlparts = {}, i = 0;
+  var url, method, port, type, faildata, ajax, ajaxTimeout, mimes, mimetype, senddata, sendkeys, sendstring, regex, base64_decode, base64_encode,
+    urlparts = {},
+    i = 0;
 
   function countChars(string, split) {
     string = string.split(split);
@@ -53,10 +55,8 @@ function majaX(data, successcallback, errorcallback) {
       urlparts.clean.query += urlparts.regex[i] === undefined ? false : urlparts.regex[i];
     }
   }
-  if (urlparts.clean.query === '') {
+  if (urlparts.clean.path.indexOf(".") !== -1) {
     urlparts.clean.fileextension = urlparts.clean.path.split('.')[urlparts.clean.path.split('.').length - 1];
-  } else {
-    urlparts.clean.fileextension = urlparts.clean.path.split('.')[urlparts.clean.path.split('.').length - 2];
   }
 
   mimes = {
@@ -89,6 +89,57 @@ function majaX(data, successcallback, errorcallback) {
       "type": type,
       "mime": mimetype,
       "data": data
+    };
+  }
+
+  if (typeof window.btoa !== 'function') {
+    base64_encode = function (s) {
+      var m = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=",
+        r = "",
+        i = 0,
+        a, b, c, d, x, y, z;
+      while (i < s.length) {
+        x = s.charCodeAt(i++);
+        y = s.charCodeAt(i++);
+        z = s.charCodeAt(i++);
+        a = x >> 2;
+        b = ((x & 3) << 4) | (y >> 4);
+        c = ((y & 15) << 2) | (z >> 6);
+        d = z & 63;
+        if (isNaN(y)) {
+          c = d = 64;
+        }
+        else if (isNaN(z)) {
+          d = 64;
+        }
+        r += m.charAt(a) + m.charAt(b) + m.charAt(c) + m.charAt(d);
+      }
+      return r;
+    };
+    base64_decode = function (s) {
+      var m = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=",
+        r = "",
+        i = 0,
+        a, b, c, d, x, y, z;
+      s = s.replace(/[^A-Za-z0-9\+\/\=]/g, "");
+      while (i < s.length) {
+        a = m.indexOf(s.charAt(i++));
+        b = m.indexOf(s.charAt(i++));
+        c = m.indexOf(s.charAt(i++));
+        d = m.indexOf(s.charAt(i++));
+        x = (a << 2) | (b >> 4);
+        y = ((b & 15) << 4) | (c >> 2);
+        z = ((c & 3) << 6) | d;
+        r += String.fromCharCode(x) + (c !== 64 ? String.fromCharCode(y) : "") + (d !== 64 ? String.fromCharCode(z) : "");
+      }
+      return r;
+    };
+  } else {
+    base64_encode = function (s) {
+      return window.btoa(s);
+    };
+    base64_decode = function (s) {
+      return window.atob(s);
     };
   }
 
@@ -450,7 +501,7 @@ function majaX(data, successcallback, errorcallback) {
           if (urlparts.clean.domain === 'github.com') {
             var jsoncontent = JSON.parse(ajax.responseText);
             if (jsoncontent.content !== undefined) {
-              jsoncontent.content = window.atob(jsoncontent.content.replace(/\n/gmi, ''));
+              jsoncontent.content = base64_decode(jsoncontent.content.replace(/\n/gmi, ''));
               successcallback(jsoncontent, ajax);
             } else {
               successcallback(JSON.parse(ajax.responseText), ajax);

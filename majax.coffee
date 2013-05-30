@@ -6,7 +6,7 @@
 # * http://opensource.org/licenses/MIT
 # *
 # * Github:  https://github.com/simonwaldherr/majaX.js/
-# * Version: 0.1.8
+# * Version: 0.1.9
 # 
 
 majaX = (data, successcallback, errorcallback) ->
@@ -98,6 +98,8 @@ majaX = (data, successcallback, errorcallback) ->
   sendkeys = undefined
   sendstring = undefined
   regex = undefined
+  base64_decode = undefined
+  base64_encode = undefined
   urlparts = {}
   i = 0
   return false  if data.url is `undefined`
@@ -125,10 +127,7 @@ majaX = (data, successcallback, errorcallback) ->
     else
       urlparts.clean.query += (if urlparts.regex[i] is `undefined` then false else urlparts.regex[i])
     i++
-  if urlparts.clean.query is ""
-    urlparts.clean.fileextension = urlparts.clean.path.split(".")[urlparts.clean.path.split(".").length - 1]
-  else
-    urlparts.clean.fileextension = urlparts.clean.path.split(".")[urlparts.clean.path.split(".").length - 2]
+  urlparts.clean.fileextension = urlparts.clean.path.split(".")[urlparts.clean.path.split(".").length - 1]  if urlparts.clean.path.indexOf(".") isnt -1
   mimes =
     txt: "text/plain"
     json: "application/json"
@@ -158,6 +157,60 @@ majaX = (data, successcallback, errorcallback) ->
       mime: mimetype
       data: data
     )
+  if typeof window.btoa isnt "function"
+    base64_encode = (s) ->
+      m = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/="
+      r = ""
+      i = 0
+      a = undefined
+      b = undefined
+      c = undefined
+      d = undefined
+      x = undefined
+      y = undefined
+      z = undefined
+      while i < s.length
+        x = s.charCodeAt(i++)
+        y = s.charCodeAt(i++)
+        z = s.charCodeAt(i++)
+        a = x >> 2
+        b = ((x & 3) << 4) | (y >> 4)
+        c = ((y & 15) << 2) | (z >> 6)
+        d = z & 63
+        if isNaN(y)
+          c = d = 64
+        else d = 64  if isNaN(z)
+        r += m.charAt(a) + m.charAt(b) + m.charAt(c) + m.charAt(d)
+      r
+
+    base64_decode = (s) ->
+      m = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/="
+      r = ""
+      i = 0
+      a = undefined
+      b = undefined
+      c = undefined
+      d = undefined
+      x = undefined
+      y = undefined
+      z = undefined
+      s = s.replace(/[^A-Za-z0-9\+\/\=]/g, "")
+      while i < s.length
+        a = m.indexOf(s.charAt(i++))
+        b = m.indexOf(s.charAt(i++))
+        c = m.indexOf(s.charAt(i++))
+        d = m.indexOf(s.charAt(i++))
+        x = (a << 2) | (b >> 4)
+        y = ((b & 15) << 4) | (c >> 2)
+        z = ((c & 3) << 6) | d
+        r += String.fromCharCode(x) + ((if c isnt 64 then String.fromCharCode(y) else "")) + ((if d isnt 64 then String.fromCharCode(z) else ""))
+      r
+  else
+    base64_encode = (s) ->
+      window.btoa s
+
+    base64_decode = (s) ->
+      window.atob s
   escapeHtmlEntities.entityTable =
     34: "quot"
     38: "amp"
@@ -428,7 +481,7 @@ majaX = (data, successcallback, errorcallback) ->
           if urlparts.clean.domain is "github.com"
             jsoncontent = JSON.parse(ajax.responseText)
             if jsoncontent.content isnt `undefined`
-              jsoncontent.content = window.atob(jsoncontent.content.replace(/\n/g, ""))
+              jsoncontent.content = base64_decode(jsoncontent.content.replace(/\n/g, ""))
               successcallback jsoncontent, ajax
             else
               successcallback JSON.parse(ajax.responseText), ajax
