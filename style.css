@@ -7,3 +7,8 @@ body {
   word-wrap: break-word;
   white-space: pre-wrap;
 }
+
+#repo td, #repo th {
+min-width: 130px;
+text-align: right;
+}
