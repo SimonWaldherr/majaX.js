@@ -7,6 +7,10 @@
 </head>
 <body>
   <h1>majaX.js</h1>
+  <h2>gh-API</h2>
+  <div class="return" id="ghapi"></div><hr/>
+  <h2>gh-API file</h2>
+  <div class="return" id="ghapi_file"></div><hr/>
   <h2>json</h2>
   <div class="return" id="json"></div><hr/>
   <h2>xml</h2>
@@ -19,6 +23,8 @@
   <div class="return" id="debug"></div>
 </body>
 <script>
+  majaX({url:'https://github.com/SimonWaldherr/majaX.js/', method:'API'}, function(json) {document.getElementById('ghapi').innerHTML = JSON.stringify(json, null, '  ')});
+  majaX({url:'https://github.com/SimonWaldherr/majaX.js/majax.js', method:'API'}, function(json) {document.getElementById('ghapi_file').innerHTML = JSON.stringify(json, null, '  ')});
   majaX({url:'./content/json.json?pi=3.14159265358', method:'GET', data:{foo:'bar',lorem:'ipsum'}}, function(json) {document.getElementById('json').innerHTML = JSON.stringify(json, null, '  ')});
   majaX({url:'./content/xml.xml', method:'GET', data:{foo:'bar',lorem:'ipsum'}}, function(xml) {document.getElementById('xml').innerHTML = JSON.stringify(xml, null, '  ')});
   majaX({url:'./content/csv.csv', method:'GET', data:{foo:'bar',lorem:'ipsum'}}, function(csv) {document.getElementById('csv').innerHTML = JSON.stringify(csv, null, '  ')});

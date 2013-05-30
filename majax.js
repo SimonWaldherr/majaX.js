@@ -446,14 +446,27 @@ function majaX(data, successcallback, errorcallback) {
           errorcallback(faildata, ajax);
         } else {
           type = type.toLowerCase();
-          if (type === 'json') {
-            successcallback(JSON.parse(ajax.responseText), ajax);
-          } else if (type === 'xml') {
-            successcallback(getXMLasObject(ajax.responseText), ajax);
-          } else if (type === 'csv') {
-            successcallback(getCSVasArray(ajax.responseText), ajax);
+          if (method === 'API') {
+            if (urlparts.clean.domain === 'github.com') {
+              var jsoncontent = JSON.parse(ajax.responseText);
+              console.log(jsoncontent);
+              if (jsoncontent.content !== undefined) {
+                jsoncontent.content = window.atob(jsoncontent.content.replace(/\n/gmi,''));
+                successcallback(jsoncontent, ajax);
+              } else {
+                successcallback(JSON.parse(ajax.responseText), ajax);
+              }
+            }
           } else {
-            successcallback(ajax.responseText, ajax);
+            if (type === 'json') {
+              successcallback(JSON.parse(ajax.responseText), ajax);
+            } else if (type === 'xml') {
+              successcallback(getXMLasObject(ajax.responseText), ajax);
+            } else if (type === 'csv') {
+              successcallback(getCSVasArray(ajax.responseText), ajax);
+            } else {
+              successcallback(ajax.responseText, ajax);
+            }
           }
         }
       }
@@ -472,7 +485,20 @@ function majaX(data, successcallback, errorcallback) {
     }
   }
 
-  if (method === 'GET') {
+  if (method === 'API') {
+    if (urlparts.clean.domain === 'github.com') {
+      type = 'json';
+      if (urlparts.clean.path.split('/')[3] === undefined) {
+        ajax.open('GET', 'https://api.github.com/repos/' + urlparts.clean.path.split('/')[1] + '/' + urlparts.clean.path.split('/')[2] + '/contents/', true);
+        ajax.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+        ajax.send();
+      } else {
+        ajax.open('GET', 'https://api.github.com/repos/' + urlparts.clean.path.split('/')[1] + '/' + urlparts.clean.path.split('/')[2] + '/contents/' + urlparts.clean.path.split('/',4)[3], true);
+        ajax.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+        ajax.send();
+      }
+    }
+  } else if (method === 'GET') {
     if (sendstring !== '') {
       if (urlparts.clean.query !== '') {
         url = url + '&' + sendstring;
