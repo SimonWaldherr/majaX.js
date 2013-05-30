@@ -11,8 +11,9 @@
   <div id="repo"></div>
 </body>
 <script>
-  var repoContent;
-  majaX({url:'https://github.com/SimonWaldherr/majaX.js/', method:'API'}, function(json) {repoContent = json; buildRepoTable();});
+  var repoContent, repoName;
+  repoName = 'SimonWaldherr/majaX.js/';
+  majaX({url:'https://github.com/'+repoName, method:'API'}, function(json) {repoContent = json; buildRepoTable();});
   
   function buildRepoTable () {
     var i = 0, string = '<table>';
@@ -21,12 +22,16 @@
       if (repoContent[i].type === 'file') {
         string += '<tr><td>'+repoContent[i].name+'</td><td>'+parseInt(repoContent[i].size/100,10)/10+'kB</td><td>'+repoContent[i].type+'</td><td><a href="'+repoContent[i].html_url.replace("https://github.com/", "https://raw.github.com/").replace("/blob/", "/")+'">source</a></td></tr>';
       } else {
-        string += '<tr><td>'+repoContent[i].name+'</td><td></td><td>'+repoContent[i].type+'</td><td></td></tr>';
+        string += '<tr><td>'+repoContent[i].name+'</td><td></td><td>'+repoContent[i].type+'</td><td><a href="#" onclick="openRepoDir(\''+repoContent[i].name+'\'); return false;">open</a></td></tr>';
       }
     }
     string += '</tbody></table>';
     console.log(string);
     document.getElementById('repo').innerHTML = string;
+  }
+  
+  function openRepoDir (foldername) {
+    majaX({url:'https://github.com/'+repoName+foldername, method:'API'}, function(json) {repoContent = json; buildRepoTable();});
   }
 </script>
 </html>
