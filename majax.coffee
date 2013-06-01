@@ -6,7 +6,7 @@
 # * http://opensource.org/licenses/MIT
 # *
 # * Github:  https://github.com/simonwaldherr/majaX.js/
-# * Version: 0.2.1
+# * Version: 0.2.2
 #
 
 majaX = undefined
@@ -24,7 +24,6 @@ majaX = (data, successcallback, errorcallback) ->
   mimes = undefined
   mimetype = undefined
   senddata = undefined
-  key = undefined
   sendkeys = undefined
   sendstring = undefined
   regex = undefined
@@ -50,7 +49,7 @@ majaX = (data, successcallback, errorcallback) ->
       urlparts.clean.domain += (if urlparts.regex[i] is `undefined` then false else urlparts.regex[i])
     else if (majax.countChars(urlparts.regex[i], ":") is 1) and (urlparts.clean.path is "")
       urlparts.clean.port = (if urlparts.regex[i] is `undefined` then false else urlparts.regex[i].split(":")[1])
-    else if (majax.countChars(urlparts.regex[i], "?") is 0) and (majax.countChars(urlparts.regex[i], "&") is 0)
+    else if (majax.countChars(urlparts.regex[i], "?") is 0) and (majax.countChars(urlparts.regex[i], "&") is 0) and (urlparts.clean.query is "")
       urlparts.clean.path += (if urlparts.regex[i] is `undefined` then false else urlparts.regex[i])
     else
       urlparts.clean.query += (if urlparts.regex[i] is `undefined` then false else urlparts.regex[i])
@@ -144,28 +143,31 @@ majaX = (data, successcallback, errorcallback) ->
       else
         url = url + "?" + sendstring
     ajax.open "GET", url, true
-    majax.overrideMime ajax, type, mimetype
+    majax.overrideMime ajax, type
     majax.setReqHeaders ajax, header
     ajax.send()
   else if method is "POST"
     ajax.open "POST", url, true
-    majax.overrideMime ajax, type, mimetype
+    majax.overrideMime ajax, type
     majax.setReqHeaders ajax, header
     ajax.send sendstring
   else
     ajax.open method, url, true
-    majax.overrideMime ajax, type, mimetype
+    majax.overrideMime ajax, type
     majax.setReqHeaders ajax, header
     ajax.send()
 
 majax =
   setReqHeaders: (ajax, headerObject) ->
+    "use strict"
+    key = undefined
     if headerObject isnt false
       if typeof headerObject is "object"
         for key of headerObject
-          ajax.setRequestHeader key, headerObject[key]  if (typeof key is "string") and (typeof headerObject[key] is "string")
+          ajax.setRequestHeader key, headerObject[key]  if typeof headerObject[key] is "string"
 
   getRespHeaders: (headerString) ->
+    "use strict"
     i = undefined
     string = undefined
     header = undefined
@@ -176,11 +178,12 @@ majax =
       while i < string.length
         if typeof string[i] is "string"
           header = string[i].split(": ")
-          headerObject[header[0]] = header[1]  if (typeof header[0] is "string") and (typeof header[1] is "string")
+          headerObject[header[0]] = header[1]  if (header[0].length > 3) and (header[1].length > 3)
         i++
     headerObject
 
-  overrideMime: (ajax, type, mimetype) ->
+  overrideMime: (ajax, type) ->
+    "use strict"
     if type is "xml"
       ajax.overrideMimeType "text/xml"
       ajax.responseType = ""
@@ -203,12 +206,10 @@ majax =
     "use strict"
     xmlroot = undefined
     foo = {}
-    if typeof xmlstring is "object"
-      majax.returnChilds foo, xmlstring, 1
-    else
-      xmlroot = document.createElement("div")
-      xmlroot.innerHTML = xmlstring
-      majax.returnChilds foo, xmlroot, 1
+    return majax.returnChilds(foo, xmlstring, 1)  if typeof xmlstring is "object"
+    xmlroot = document.createElement("div")
+    xmlroot.innerHTML = xmlstring
+    majax.returnChilds foo, xmlroot, 1
 
   returnChilds: (element, node, deep) ->
     "use strict"
@@ -238,6 +239,12 @@ majax =
       i++
     element
 
+  isEmpty: (obj) ->
+    "use strict"
+    empty = {}
+    return true  if obj is empty
+    false
+
   cleanArray: (actual) ->
     "use strict"
     newArray = []
@@ -256,12 +263,11 @@ majax =
   cleanObject: (actual) ->
     "use strict"
     newArray = {}
-    clean = undefined
     key = undefined
     for key of actual
       if (actual[key] isnt `undefined`) and (typeof actual[key] isnt "object") and (actual[key] isnt null) and (typeof actual[key] isnt "function")
         newArray[key] = actual[key]
-      else newArray[key] = majax.cleanObject(actual[key])  if (majax.cleanObject(actual[key]) isnt {}) and (actual[key] isnt null)  if typeof actual[key] is "object"
+      else newArray[key] = majax.cleanObject(actual[key])  if (not majax.isEmpty(majax.cleanObject(actual[key]))) and (actual[key] isnt null)  if typeof actual[key] is "object"
     newArray
 
   getCSVasArray: (csvstring) ->
