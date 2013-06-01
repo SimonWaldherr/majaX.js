@@ -24,11 +24,18 @@
 </body>
 <script>
   majaX({url:'https://github.com/SimonWaldherr/majaX.js/', method:'API'}, function(json) {document.getElementById('ghapi').innerHTML = JSON.stringify(json, null, '  ')});
+
   majaX({url:'https://github.com/SimonWaldherr/majaX.js/majax.js', method:'API'}, function(json) {document.getElementById('ghapi_file').innerHTML = JSON.stringify(json, null, '  ')});
-  majaX({url:'./../content/json.json?pi=3.14159265358', method:'GET', data:{foo:'bar',lorem:'ipsum'}}, function(json) {document.getElementById('json').innerHTML = JSON.stringify(json, null, '  ')});
-  majaX({url:'./../content/xml.xml', method:'GET', data:{foo:'bar',lorem:'ipsum'}}, function(xml) {document.getElementById('xml').innerHTML = JSON.stringify(xml, null, '  ')});
-  majaX({url:'./../content/csv.csv', method:'GET', data:{foo:'bar',lorem:'ipsum'}}, function(csv) {document.getElementById('csv').innerHTML = JSON.stringify(csv, null, '  ')});
-  majaX({url:'./../content/plain.txt', method:'GET', data:{foo:'bar',lorem:'ipsum'}}, function(plain) {document.getElementById('plain').innerHTML = JSON.stringify(plain)});
+
+  majaX({url:'./../content/data.json?pi=3.14159265358', method:'GET', data:{foo:'bar',lorem:'ipsum'}}, function(json) {document.getElementById('json').innerHTML = JSON.stringify(json, null, '  ')});
+
+  majaX({'url':'./../content/data.xml', 'method':'GET', 'data':{'foo':'bar','lorem':'ipsum'}, 'header':{'Content-type':'text/xml'}}, function(xml) {document.getElementById('xml').innerHTML = JSON.stringify(xml, null, '  ')});
+
+  majaX({url:'./../content/data.csv', method:'GET', data:{foo:'bar',lorem:'ipsum'}}, function(csv) {document.getElementById('csv').innerHTML = JSON.stringify(csv, null, '  ')});
+
+  majaX({url:'./../content/plain.txt', method:'GET', data:{foo:'bar',lorem:'ipsum'}}, function(plain, ajax) {document.getElementById('plain').innerHTML = JSON.stringify(majax.cleanObject(ajax), null, '  ')});
+
   document.getElementById('debug').innerHTML = JSON.stringify(majaX({url:'http://simonwaldherr.github.io:80/majaX.js/content/xml.xml?foo=bar&lorem=ipsum', method:'DEBUG', data:{foo:'bar',lorem:'ipsum'}}), null, '  ');
+
 </script>
 </html>

@@ -6,8 +6,8 @@
 # * http://opensource.org/licenses/MIT
 # *
 # * Github:  https://github.com/simonwaldherr/majaX.js/
-# * Version: 0.2.0
-# 
+# * Version: 0.2.1
+#
 
 majaX = undefined
 majax = undefined
@@ -17,12 +17,14 @@ majaX = (data, successcallback, errorcallback) ->
   method = undefined
   port = undefined
   type = undefined
+  header = undefined
   faildata = undefined
   ajax = undefined
   ajaxTimeout = undefined
   mimes = undefined
   mimetype = undefined
   senddata = undefined
+  key = undefined
   sendkeys = undefined
   sendstring = undefined
   regex = undefined
@@ -70,10 +72,12 @@ majaX = (data, successcallback, errorcallback) ->
   url = (if data.url is `undefined` then false else data.url)
   method = (if data.method is `undefined` then "GET" else data.method)
   port = (if data.port is `undefined` then (if urlparts.clean.port is `undefined` then "80" else urlparts.clean.port) else data.port)
-  type = (if data.type is `undefined` then (if urlparts.clean.fileextension is `undefined` then "plain" else urlparts.clean.fileextension) else data.type)
+  type = (if data.type is `undefined` then (if urlparts.clean.fileextension is `undefined` then "txt" else urlparts.clean.fileextension.toLowerCase()) else data.type.toLowerCase())
   mimetype = (if data.mimetype is `undefined` then (if mimes[urlparts.clean.fileextension] is `undefined` then "text/plain" else mimes[urlparts.clean.fileextension]) else data.mimetype)
   senddata = (if data.data is `undefined` then false else data.data)
   faildata = (if data.faildata is `undefined` then false else data.faildata)
+  header = (if data.header is `undefined` then {} else data.header)
+  header["Content-type"] = "application/x-www-form-urlencoded"  if header["Content-type"] is `undefined`
   if method is "DEBUG"
     return (
       url: url
@@ -88,12 +92,13 @@ majaX = (data, successcallback, errorcallback) ->
     ajax.abort()
   , 6000)
   ajax.onreadystatechange = ->
+    jsoncontent = undefined
     if ajax.readyState is 4
       if ajax.status isnt 200
         errorcallback faildata, ajax
       else
         clearTimeout ajaxTimeout
-        type = type.toLowerCase()
+        ajax.headersObject = majax.getRespHeaders(ajax.getAllResponseHeaders())
         if method is "API"
           if urlparts.clean.domain is "github.com"
             jsoncontent = JSON.parse(ajax.responseText)
@@ -109,6 +114,8 @@ majaX = (data, successcallback, errorcallback) ->
             successcallback majax.getXMLasObject(ajax.responseText), ajax
           else if type is "csv"
             successcallback majax.getCSVasArray(ajax.responseText), ajax
+          else if (type is "png") or (type is "gif") or (type is "jpg") or (type is "jpeg") or (type is "mp3") or (type is "m4a")
+            successcallback ajax.response, ajax
           else
             successcallback ajax.responseText, ajax
 
@@ -124,11 +131,11 @@ majaX = (data, successcallback, errorcallback) ->
       type = "json"
       if urlparts.clean.path.split("/")[3] is `undefined`
         ajax.open "GET", "https://api.github.com/repos/" + urlparts.clean.path.split("/")[1] + "/" + urlparts.clean.path.split("/")[2] + "/contents/", true
-        ajax.setRequestHeader "Content-type", "application/x-www-form-urlencoded"
+        majax.setReqHeaders ajax, header
         ajax.send()
       else
         ajax.open "GET", "https://api.github.com/repos/" + urlparts.clean.path.split("/")[1] + "/" + urlparts.clean.path.split("/")[2] + "/contents/" + urlparts.clean.path.split("/", 4)[3], true
-        ajax.setRequestHeader "Content-type", "application/x-www-form-urlencoded"
+        majax.setReqHeaders ajax, header
         ajax.send()
   else if method is "GET"
     if sendstring isnt ""
@@ -137,18 +144,50 @@ majaX = (data, successcallback, errorcallback) ->
       else
         url = url + "?" + sendstring
     ajax.open "GET", url, true
-    ajax.setRequestHeader "Content-type", "application/x-www-form-urlencoded"
+    majax.overrideMime ajax, type, mimetype
+    majax.setReqHeaders ajax, header
     ajax.send()
   else if method is "POST"
     ajax.open "POST", url, true
-    ajax.setRequestHeader "Content-type", "application/x-www-form-urlencoded"
+    majax.overrideMime ajax, type, mimetype
+    majax.setReqHeaders ajax, header
     ajax.send sendstring
   else
     ajax.open method, url, true
-    ajax.setRequestHeader "Content-type", "application/x-www-form-urlencoded"
+    majax.overrideMime ajax, type, mimetype
+    majax.setReqHeaders ajax, header
     ajax.send()
 
 majax =
+  setReqHeaders: (ajax, headerObject) ->
+    if headerObject isnt false
+      if typeof headerObject is "object"
+        for key of headerObject
+          ajax.setRequestHeader key, headerObject[key]  if (typeof key is "string") and (typeof headerObject[key] is "string")
+
+  getRespHeaders: (headerString) ->
+    i = undefined
+    string = undefined
+    header = undefined
+    headerObject = {}
+    if typeof headerString is "string"
+      string = headerString.split(/\n/)
+      i = 0
+      while i < string.length
+        if typeof string[i] is "string"
+          header = string[i].split(": ")
+          headerObject[header[0]] = header[1]  if (typeof header[0] is "string") and (typeof header[1] is "string")
+        i++
+    headerObject
+
+  overrideMime: (ajax, type, mimetype) ->
+    if type is "xml"
+      ajax.overrideMimeType "text/xml"
+      ajax.responseType = ""
+    else if (type is "png") or (type is "gif") or (type is "jpg") or (type is "jpeg") or (type is "mp3") or (type is "m4a")
+      ajax.overrideMimeType "text/plain; charset=x-user-defined"
+      ajax.responseType = "arraybuffer"
+
   countChars: (string, split) ->
     "use strict"
     string = string.split(split)
@@ -158,14 +197,18 @@ majax =
   getText: (string) ->
     "use strict"
     re = /<([^<>]*)>([^\/]*)<(\/[^<>]*)>/g
-    string.replace re, ""
+    string.replace re, ""  if typeof string is "string"
 
   getXMLasObject: (xmlstring) ->
     "use strict"
-    xmlroot = document.createElement("div")
+    xmlroot = undefined
     foo = {}
-    xmlroot.innerHTML = xmlstring
-    majax.returnChilds foo, xmlroot, 1
+    if typeof xmlstring is "object"
+      majax.returnChilds foo, xmlstring, 1
+    else
+      xmlroot = document.createElement("div")
+      xmlroot.innerHTML = xmlstring
+      majax.returnChilds foo, xmlroot, 1
 
   returnChilds: (element, node, deep) ->
     "use strict"
@@ -187,10 +230,11 @@ majax =
             if (key isnt "accessKey") and (key isnt "baseURI") and (key isnt "className") and (key isnt "contentEditable") and (key isnt "dir") and (key isnt "namespaceURI") and (obj isnt "") and (key isnt key.toUpperCase()) and (obj isnt 0) and (key isnt "childs") and (key isnt "textContent") and (key isnt "nodeType") and (key isnt "tabIndex") and (key isnt "innerHTML") and (key isnt "outerHTML")
               element[ii][key] = obj
             else element[ii][key] = majax.escapeHtmlEntities(obj)  if (key is "innerHTML") or (key is "outerHTML")
-        plaintext = majax.getText(node.childNodes[i].innerHTML).trim()
-        element[ii].textContent = plaintext  if plaintext isnt ""
-        element[ii].childs = majax.returnChilds(returnArray, node.childNodes[i], deep + 1)  if node.childNodes[i].childNodes.length > 1
-        ii++
+        if node.childNodes[i].innerHTML isnt `undefined`
+          plaintext = majax.getText(node.childNodes[i].innerHTML).trim()
+          element[ii].textContent = plaintext  if plaintext isnt ""
+          element[ii].childs = majax.returnChilds(returnArray, node.childNodes[i], deep + 1)  if node.childNodes[i].childNodes.length > 1
+          ii++
       i++
     element
 
@@ -207,6 +251,17 @@ majax =
         clean = majax.cleanArray(actual[i])
         newArray.push majax.cleanArray(actual[i])  if clean[0] isnt ""
       i++
+    newArray
+
+  cleanObject: (actual) ->
+    "use strict"
+    newArray = {}
+    clean = undefined
+    key = undefined
+    for key of actual
+      if (actual[key] isnt `undefined`) and (typeof actual[key] isnt "object") and (actual[key] isnt null) and (typeof actual[key] isnt "function")
+        newArray[key] = actual[key]
+      else newArray[key] = majax.cleanObject(actual[key])  if (majax.cleanObject(actual[key]) isnt {}) and (actual[key] isnt null)  if typeof actual[key] is "object"
     newArray
 
   getCSVasArray: (csvstring) ->

@@ -1,0 +1,35 @@
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>majaX.js</title>
+  <link href="./../style.css" rel="stylesheet" type="text/css">
+  <script src="./../majax.js"></script>
+</head>
+<body>
+  <h1>majaX.js</h1>
+  <h2>img</h2>
+  <div class="return" id="img"></div>
+  <p id="loadedimages"></p>
+</body>
+<script>
+  var loadedImages = 0;
+  
+  function loadImageViaAjax () {
+    window.setTimeout("majaX({url:'./../content/img.gif'}, function (respT, respo) {setImage (respo)});", 250);
+  }
+  
+  function setImage (respo) {
+    if (loadedImages < 10) {
+      var base64String = window.btoa(String.fromCharCode.apply(null, new Uint8Array(respo.response)));
+      document.getElementById('img').innerHTML += '<img src="data:image/gif;base64,'+base64String+'" />';
+      window.setTimeout(loadImageViaAjax, 750);
+      loadedImages++;
+    }
+    document.getElementById('loadedimages').innerHTML = 'loaded images: '+loadedImages;
+  }
+  
+  window.onload = function () {
+    loadImageViaAjax();
+  };
+</script>
+</html>
