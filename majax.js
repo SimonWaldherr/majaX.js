@@ -194,7 +194,7 @@ majax = {
         if (typeof string[i] === 'string') {
           header = string[i].split(': ');
           if ((header[0].length > 3) && (header[1].length > 3)) {
-            headerObject[header[0]] = header[1];
+            headerObject[header[0].trim()] = header[1].trim();
           }
         }
       }
