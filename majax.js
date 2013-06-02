@@ -6,7 +6,7 @@
  * http://opensource.org/licenses/MIT
  *
  * Github:  https://github.com/simonwaldherr/majaX.js/
- * Version: 0.2.1
+ * Version: 0.2.3
  */
 
 /*jslint browser: true, white: true, plusplus: true, indent: 2, bitwise: true, regexp: true, forin: true */
@@ -64,7 +64,7 @@ majaX = function (data, successcallback, errorcallback) {
     'vcf': 'text/vcard'
   };
   url = data.url === undefined ? false : data.url;
-  method = data.method === undefined ? 'GET' : data.method;
+  method = data.method === undefined ? 'GET' : data.method.toUpperCase();
   port = data.port === undefined ? urlparts.clean.port === undefined ? '80' : urlparts.clean.port : data.port;
   type = data.type === undefined ? urlparts.clean.fileextension === undefined ? 'txt' : urlparts.clean.fileextension.toLowerCase() : data.type.toLowerCase();
   mimetype = data.mimetype === undefined ? mimes[urlparts.clean.fileextension] === undefined ? 'text/plain' : mimes[urlparts.clean.fileextension] : data.mimetype;
@@ -89,13 +89,15 @@ majaX = function (data, successcallback, errorcallback) {
       ajax.abort();
     }, 6000);
   ajax.onreadystatechange = function () {
-    var jsoncontent;
+    var jsoncontent, status;
     if (ajax.readyState === 4) {
-      if (ajax.status !== 200) {
+      status = ajax.status.toString().charAt(0);
+      if ((status !== '2')&&(status !== '3')) {
         errorcallback(faildata, ajax);
       } else {
         clearTimeout(ajaxTimeout);
         ajax.headersObject = majax.getRespHeaders(ajax.getAllResponseHeaders());
+        ajax = majax.cleanObject(ajax);
         if (method === 'API') {
           if (urlparts.clean.domain === 'github.com') {
             jsoncontent = JSON.parse(ajax.responseText);
@@ -146,28 +148,36 @@ majaX = function (data, successcallback, errorcallback) {
         ajax.send();
       }
     }
-  } else if (method === 'GET') {
-    if (sendstring !== '') {
-      if (urlparts.clean.query !== '') {
-        url = url + '&' + sendstring;
-      } else {
-        url = url + '?' + sendstring;
+  } else {
+    if (method !== 'POST') {
+      if (sendstring !== '') {
+        if (urlparts.clean.query !== '') {
+          url = url + '&' + sendstring;
+        } else {
+          url = url + '?' + sendstring;
+        }
       }
     }
-    ajax.open('GET', url, true);
-    majax.overrideMime(ajax, type);
-    majax.setReqHeaders(ajax, header);
-    ajax.send();
-  } else if (method === 'POST') {
-    ajax.open('POST', url, true);
-    majax.overrideMime(ajax, type);
-    majax.setReqHeaders(ajax, header);
-    ajax.send(sendstring);
-  } else {
-    ajax.open(method, url, true);
-    majax.overrideMime(ajax, type);
-    majax.setReqHeaders(ajax, header);
-    ajax.send();
+
+    if (method === 'GET') {
+      ajax.open('GET', url, true);
+      majax.overrideMime(ajax, type);
+      majax.setReqHeaders(ajax, header);
+      ajax.send();
+    } else if (method === 'POST') {
+      ajax.open('POST', url, true);
+      majax.overrideMime(ajax, type);
+      majax.setReqHeaders(ajax, header);
+      ajax.send(sendstring);
+    } else {
+      if (method === 'HEAD') {
+        type = 'none';
+      }
+      ajax.open(method, url, true);
+      majax.overrideMime(ajax, type);
+      majax.setReqHeaders(ajax, header);
+      ajax.send();
+    }
   }
 };
 
@@ -270,8 +280,8 @@ majax = {
   },
   isEmpty: function (obj) {
     "use strict";
-    var empty = {};
-    if (obj === empty) {
+    var emptyObj = {}, emptyArr = [];
+    if ((obj === emptyObj)||(obj === emptyArr)||(obj === null)||(obj === undefined)) {
       return true;
     }
     return false;
@@ -296,7 +306,7 @@ majax = {
     "use strict";
     var newArray = {}, key;
     for (key in actual) {
-      if ((actual[key] !== undefined) && (typeof actual[key] !== 'object') && (actual[key] !== null) && (typeof actual[key] !== 'function')) {
+      if ((typeof actual[key] !== 'object') && (typeof actual[key] !== 'function') && (typeof actual[key] !== '') && (!majax.isEmpty(actual[key]))) {
         newArray[key] = actual[key];
       } else if (typeof actual[key] === 'object') {
         if ((!majax.isEmpty(majax.cleanObject(actual[key]))) && (actual[key] !== null)) {

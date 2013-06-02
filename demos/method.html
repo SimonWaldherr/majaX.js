@@ -1,0 +1,31 @@
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>majaX.js</title>
+  <link href="./../style.css" rel="stylesheet" type="text/css">
+  <script src="./../majax.js"></script>
+</head>
+<body>
+  <h1>majaX.js</h1>
+  <h2>HEAD</h2>
+  <div class="return" id="head"></div><hr/>
+  <h2>POST</h2>
+  <div class="return" id="post"></div><hr/>
+  <h2>PUT</h2>
+  <div class="return" id="put"></div><hr/>
+  <h2>DELETE</h2>
+  <div class="return" id="delete"></div><hr/>
+  <h2>GET <i>(with redirect)</i></h2>
+  <div class="return" id="get"></div><hr/>
+  <h2>GET <i>(with data)</i></h2>
+  <div class="return" id="get2"></div>
+</body>
+<script>
+  majaX({url:'http://cdn.simon.waldherr.eu/projects/majaX/content/server.php',method:'HEAD'}, function(json, full) {document.getElementById('head').innerHTML = JSON.stringify(full, null, '  ')});
+  majaX({url:'http://cdn.simon.waldherr.eu/projects/majaX/content/server.php',type:'json', method:'POST', data:{'lorem':'ipsum','dolor':'sit'}}, function(json) {document.getElementById('post').innerHTML = JSON.stringify(json, null, '  ')});
+  majaX({url:'http://cdn.simon.waldherr.eu/projects/majaX/content/server.php',type:'json', method:'PUT'}, function(json) {document.getElementById('put').innerHTML = JSON.stringify(json, null, '  ')});
+  majaX({url:'http://cdn.simon.waldherr.eu/projects/majaX/content/server.php',type:'json', method:'DELETE'}, function(json) {document.getElementById('delete').innerHTML = JSON.stringify(json, null, '  ')});
+  majaX({url:'http://cdn.simon.waldherr.eu/projects/majaX/content/server.php',type:'json', method:'GET', data:{'rd':'true'}}, function(json) {document.getElementById('get').innerHTML = JSON.stringify(json, null, '  ')});
+  majaX({url:'http://cdn.simon.waldherr.eu/projects/majaX/content/server.php',type:'json', method:'GET', data:{'lorem':'ipsum','dolor':'sit'}}, function(json) {document.getElementById('get2').innerHTML = JSON.stringify(json, null, '  ')});
+</script>
+</html>

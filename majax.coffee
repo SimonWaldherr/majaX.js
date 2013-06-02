@@ -6,7 +6,7 @@
 # * http://opensource.org/licenses/MIT
 # *
 # * Github:  https://github.com/simonwaldherr/majaX.js/
-# * Version: 0.2.2
+# * Version: 0.2.3
 #
 
 majaX = undefined
@@ -69,7 +69,7 @@ majaX = (data, successcallback, errorcallback) ->
     vcf: "text/vcard"
 
   url = (if data.url is `undefined` then false else data.url)
-  method = (if data.method is `undefined` then "GET" else data.method)
+  method = (if data.method is `undefined` then "GET" else data.method.toUpperCase())
   port = (if data.port is `undefined` then (if urlparts.clean.port is `undefined` then "80" else urlparts.clean.port) else data.port)
   type = (if data.type is `undefined` then (if urlparts.clean.fileextension is `undefined` then "txt" else urlparts.clean.fileextension.toLowerCase()) else data.type.toLowerCase())
   mimetype = (if data.mimetype is `undefined` then (if mimes[urlparts.clean.fileextension] is `undefined` then "text/plain" else mimes[urlparts.clean.fileextension]) else data.mimetype)
@@ -92,12 +92,15 @@ majaX = (data, successcallback, errorcallback) ->
   , 6000)
   ajax.onreadystatechange = ->
     jsoncontent = undefined
+    status = undefined
     if ajax.readyState is 4
-      if ajax.status isnt 200
+      status = ajax.status.toString().charAt(0)
+      if (status isnt "2") and (status isnt "3")
         errorcallback faildata, ajax
       else
         clearTimeout ajaxTimeout
         ajax.headersObject = majax.getRespHeaders(ajax.getAllResponseHeaders())
+        ajax = majax.cleanObject(ajax)
         if method is "API"
           if urlparts.clean.domain is "github.com"
             jsoncontent = JSON.parse(ajax.responseText)
@@ -136,26 +139,29 @@ majaX = (data, successcallback, errorcallback) ->
         ajax.open "GET", "https://api.github.com/repos/" + urlparts.clean.path.split("/")[1] + "/" + urlparts.clean.path.split("/")[2] + "/contents/" + urlparts.clean.path.split("/", 4)[3], true
         majax.setReqHeaders ajax, header
         ajax.send()
-  else if method is "GET"
-    if sendstring isnt ""
-      if urlparts.clean.query isnt ""
-        url = url + "&" + sendstring
-      else
-        url = url + "?" + sendstring
-    ajax.open "GET", url, true
-    majax.overrideMime ajax, type
-    majax.setReqHeaders ajax, header
-    ajax.send()
-  else if method is "POST"
-    ajax.open "POST", url, true
-    majax.overrideMime ajax, type
-    majax.setReqHeaders ajax, header
-    ajax.send sendstring
   else
-    ajax.open method, url, true
-    majax.overrideMime ajax, type
-    majax.setReqHeaders ajax, header
-    ajax.send()
+    if method isnt "POST"
+      if sendstring isnt ""
+        if urlparts.clean.query isnt ""
+          url = url + "&" + sendstring
+        else
+          url = url + "?" + sendstring
+    if method is "GET"
+      ajax.open "GET", url, true
+      majax.overrideMime ajax, type
+      majax.setReqHeaders ajax, header
+      ajax.send()
+    else if method is "POST"
+      ajax.open "POST", url, true
+      majax.overrideMime ajax, type
+      majax.setReqHeaders ajax, header
+      ajax.send sendstring
+    else
+      type = "none"  if method is "HEAD"
+      ajax.open method, url, true
+      majax.overrideMime ajax, type
+      majax.setReqHeaders ajax, header
+      ajax.send()
 
 majax =
   setReqHeaders: (ajax, headerObject) ->
@@ -178,7 +184,7 @@ majax =
       while i < string.length
         if typeof string[i] is "string"
           header = string[i].split(": ")
-          headerObject[header[0]] = header[1]  if (header[0].length > 3) and (header[1].length > 3)
+          headerObject[header[0].trim()] = header[1].trim()  if (header[0].length > 3) and (header[1].length > 3)
         i++
     headerObject
 
@@ -241,8 +247,9 @@ majax =
 
   isEmpty: (obj) ->
     "use strict"
-    empty = {}
-    return true  if obj is empty
+    emptyObj = {}
+    emptyArr = []
+    return true  if (obj is emptyObj) or (obj is emptyArr) or (obj is null) or (obj is `undefined`)
     false
 
   cleanArray: (actual) ->
@@ -265,7 +272,7 @@ majax =
     newArray = {}
     key = undefined
     for key of actual
-      if (actual[key] isnt `undefined`) and (typeof actual[key] isnt "object") and (actual[key] isnt null) and (typeof actual[key] isnt "function")
+      if (typeof actual[key] isnt "object") and (typeof actual[key] isnt "function") and (typeof actual[key] isnt "") and (not majax.isEmpty(actual[key]))
         newArray[key] = actual[key]
       else newArray[key] = majax.cleanObject(actual[key])  if (not majax.isEmpty(majax.cleanObject(actual[key]))) and (actual[key] isnt null)  if typeof actual[key] is "object"
     newArray
