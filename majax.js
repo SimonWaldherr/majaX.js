@@ -9,7 +9,7 @@
  * Version: 0.2.4
  */
 
-/*jslint browser: true, white: true, plusplus: true, indent: 2, bitwise: true, regexp: true, forin: true */
+/*jslint browser: true, white: true, indent: 2, bitwise: true, regexp: true */
 /*global ActiveXObject, window */
 /*exported majaX */
 
@@ -23,6 +23,7 @@ majaX = function (data, successcallback, errorcallback) {
   if (data.url === undefined) {
     return false;
   }
+
   regex = /((http[s]?:\/\/)?([\.:\/?&]+)?([^\.:\/?&]+)?)/gm;
   urlparts.regex = data.url.match(regex);
   urlparts.clean = {
@@ -33,7 +34,8 @@ majaX = function (data, successcallback, errorcallback) {
     'fileextension': '',
     'query': ''
   };
-  for (i = 0; i < urlparts.regex.length; i++) {
+
+  for (i = 0; i < urlparts.regex.length; i += 1) {
     if (majax.countChars(urlparts.regex[i], '://') === 1) {
       urlparts.clean.protocol = urlparts.regex[i] === undefined ? false : urlparts.regex[i].split('://')[0];
       urlparts.clean.domain = urlparts.regex[i] === undefined ? false : urlparts.regex[i].split('://')[1];
@@ -77,6 +79,7 @@ majaX = function (data, successcallback, errorcallback) {
     'webma': 'audio/webm',
     'wav'  : 'audio/wav'
   };
+
   url      = data.url === undefined ? false : data.url;
   method   = data.method === undefined ? 'GET' : data.method.toUpperCase();
   port     = data.port === undefined ? urlparts.clean.port === undefined ? '80' : urlparts.clean.port : data.port;
@@ -87,7 +90,7 @@ majaX = function (data, successcallback, errorcallback) {
   senddata = data.data === undefined ? false : data.data;
   faildata = data.faildata === undefined ? false : data.faildata;
   header   = data.header === undefined ? {} : data.header;
-  
+
   if (header['Content-type'] === undefined) {
     header['Content-type'] = 'application/x-www-form-urlencoded';
   }
@@ -103,13 +106,13 @@ majaX = function (data, successcallback, errorcallback) {
   }
   ajax = (window.ActiveXObject) ? new ActiveXObject("Microsoft.XMLHTTP") : (XMLHttpRequest && new XMLHttpRequest()) || null;
   ajaxTimeout = window.setTimeout(function () {
-      ajax.abort();
-    }, 6000);
+    ajax.abort();
+  }, 6000);
   ajax.onreadystatechange = function () {
     var jsoncontent, status;
     if (ajax.readyState === 4) {
       status = ajax.status.toString().charAt(0);
-      if ((status !== '2')&&(status !== '3')) {
+      if ((status !== '2') && (status !== '3')) {
         errorcallback(faildata, ajax);
       } else {
         clearTimeout(ajaxTimeout);
@@ -125,7 +128,7 @@ majaX = function (data, successcallback, errorcallback) {
             }
           }
         } else {
-          if (typed <3) {
+          if (typed < 3) {
             mimetype = ajax.headersObject['Content-Type'];
           }
           if (mimetype.indexOf('json') !== -1) {
@@ -147,11 +150,13 @@ majaX = function (data, successcallback, errorcallback) {
   sendstring = '';
   if (senddata !== false) {
     for (sendkeys in senddata) {
-      if (i !== 0) {
-        sendstring += '&';
+      if (typeof senddata[sendkeys] === 'string') {
+        if (i !== 0) {
+          sendstring += '&';
+        }
+        sendstring += sendkeys + '=' + senddata[sendkeys];
+        i += 1;
       }
-      sendstring += sendkeys + '=' + senddata[sendkeys];
-      i++;
     }
   }
   if (method === 'API') {
@@ -219,7 +224,7 @@ majax = {
     var i, string, header, headerObject = {};
     if (typeof headerString === 'string') {
       string = headerString.split(/\n/);
-      for (i = 0; i < string.length; i++) {
+      for (i = 0; i < string.length; i += 1) {
         if (typeof string[i] === 'string') {
           header = string[i].split(': ');
           if ((header[0].length > 3) && (header[1].length > 3)) {
@@ -270,16 +275,18 @@ majax = {
     var i, ii, obj, key, plaintext, returnArray = [],
       childs = node.childNodes.length;
     ii = 0;
-    for (i = 0; i < childs; i++) {
+    for (i = 0; i < childs; i += 1) {
       if (node.childNodes[i].localName !== null) {
         element[ii] = {};
         for (key in node.childNodes[i]) {
-          obj = node.childNodes[i][key];
-          if ((typeof obj === 'string') || (typeof obj === 'number')) {
-            if ((key !== 'accessKey') && (key !== 'baseURI') && (key !== 'className') && (key !== 'contentEditable') && (key !== 'dir') && (key !== 'namespaceURI') && (obj !== "") && (key !== key.toUpperCase()) && (obj !== 0) && (key !== 'childs') && (key !== 'textContent') && (key !== 'nodeType') && (key !== 'tabIndex') && (key !== 'innerHTML') && (key !== 'outerHTML')) {
-              element[ii][key] = obj;
-            } else if ((key === 'innerHTML') || (key === 'outerHTML')) {
-              element[ii][key] = majax.escapeHtmlEntities(obj);
+          if (node.childNodes[i][key] !== undefined) {
+            if ((typeof node.childNodes[i][key] === 'string') || (typeof node.childNodes[i][key] === 'number')) {
+              obj = node.childNodes[i][key];
+              if ((key !== 'accessKey') && (key !== 'baseURI') && (key !== 'className') && (key !== 'contentEditable') && (key !== 'dir') && (key !== 'namespaceURI') && (obj !== "") && (key !== key.toUpperCase()) && (obj !== 0) && (key !== 'childs') && (key !== 'textContent') && (key !== 'nodeType') && (key !== 'tabIndex') && (key !== 'innerHTML') && (key !== 'outerHTML')) {
+                element[ii][key] = obj;
+              } else if ((key === 'innerHTML') || (key === 'outerHTML')) {
+                element[ii][key] = majax.escapeHtmlEntities(obj);
+              }
             }
           }
         }
@@ -291,7 +298,7 @@ majax = {
           if (node.childNodes[i].childNodes.length > 1) {
             element[ii].childs = majax.returnChilds(returnArray, node.childNodes[i], deep + 1);
           }
-          ii++;
+          ii += 1;
         }
       }
     }
@@ -300,7 +307,7 @@ majax = {
   isEmpty: function (obj) {
     "use strict";
     var emptyObj = {}, emptyArr = [];
-    if ((obj === emptyObj)||(obj === emptyArr)||(obj === null)||(obj === undefined)) {
+    if ((obj === emptyObj) || (obj === emptyArr) || (obj === null) || (obj === undefined)) {
       return true;
     }
     return false;
@@ -308,8 +315,9 @@ majax = {
   cleanArray: function (actual) {
     "use strict";
     var newArray = [],
-      clean, i = 0;
-    for (i = 0; i < actual.length; i++) {
+      clean,
+      i = 0;
+    for (i = 0; i < actual.length; i += 1) {
       if ((typeof actual[i] === 'string') || (typeof actual[i] === 'number')) {
         newArray.push(actual[i]);
       } else if (typeof actual[i] === 'object') {
@@ -325,11 +333,13 @@ majax = {
     "use strict";
     var newArray = {}, key;
     for (key in actual) {
-      if ((typeof actual[key] !== 'object') && (typeof actual[key] !== 'function') && (typeof actual[key] !== '') && (!majax.isEmpty(actual[key]))) {
-        newArray[key] = actual[key];
-      } else if (typeof actual[key] === 'object') {
-        if ((!majax.isEmpty(majax.cleanObject(actual[key]))) && (actual[key] !== null)) {
-          newArray[key] = majax.cleanObject(actual[key]);
+      if (actual[key] !== undefined) {
+        if ((typeof actual[key] !== 'object') && (typeof actual[key] !== 'function') && (typeof actual[key] !== '') && (!majax.isEmpty(actual[key]))) {
+          newArray[key] = actual[key];
+        } else if (typeof actual[key] === 'object') {
+          if ((!majax.isEmpty(majax.cleanObject(actual[key]))) && (actual[key] !== null)) {
+            newArray[key] = majax.cleanObject(actual[key]);
+          }
         }
       }
     }
@@ -366,9 +376,12 @@ majax = {
         i = 0,
         a, b, c, d, x, y, z;
       while (i < s.length) {
-        x = s.charCodeAt(i++);
-        y = s.charCodeAt(i++);
-        z = s.charCodeAt(i++);
+        i += 1;
+        x = s.charCodeAt(i);
+        i += 1;
+        y = s.charCodeAt(i);
+        i += 1;
+        z = s.charCodeAt(i);
         a = x >> 2;
         b = ((x & 3) << 4) | (y >> 4);
         c = ((y & 15) << 2) | (z >> 6);
@@ -393,10 +406,14 @@ majax = {
         a, b, c, d, x, y, z;
       s = s.replace(/[^A-Za-z0-9\+\/\=]/g, "");
       while (i < s.length) {
-        a = m.indexOf(s.charAt(i++));
-        b = m.indexOf(s.charAt(i++));
-        c = m.indexOf(s.charAt(i++));
-        d = m.indexOf(s.charAt(i++));
+        i += 1;
+        a = m.indexOf(s.charAt(i));
+        i += 1;
+        b = m.indexOf(s.charAt(i));
+        i += 1;
+        c = m.indexOf(s.charAt(i));
+        i += 1;
+        d = m.indexOf(s.charAt(i));
         x = (a << 2) | (b >> 4);
         y = ((b & 15) << 4) | (c >> 2);
         z = ((c & 3) << 6) | d;
