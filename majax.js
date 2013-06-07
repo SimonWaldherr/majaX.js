@@ -3,10 +3,10 @@
  *
  * Copyright 2013, Simon Waldherr - http://simon.waldherr.eu/
  * Released under the MIT Licence
- * http://opensource.org/licenses/MIT
+ * http://simon.waldherr.eu/license/mit/
  *
  * Github:  https://github.com/simonwaldherr/majaX.js/
- * Version: 0.2.3
+ * Version: 0.2.4
  */
 
 /*jslint browser: true, white: true, plusplus: true, indent: 2, bitwise: true, regexp: true, forin: true */
@@ -17,7 +17,7 @@ var majaX, majax;
 
 majaX = function (data, successcallback, errorcallback) {
   "use strict";
-  var url, method, port, type, header, faildata, ajax, ajaxTimeout, mimes, mimetype, senddata, sendkeys, sendstring, regex,
+  var url, method, port, type, typed, header, faildata, ajax, ajaxTimeout, mimes, mimetype, senddata, sendkeys, sendstring, regex,
     urlparts = {},
     i = 0;
   if (data.url === undefined) {
@@ -51,37 +51,54 @@ majaX = function (data, successcallback, errorcallback) {
     urlparts.clean.fileextension = urlparts.clean.path.split('.')[urlparts.clean.path.split('.').length - 1];
   }
   mimes = {
-    'txt': 'text/plain',
-    'json': 'application/json',
-    'atom': 'application/atom+xml',
-    'rss': 'application/rss+xml',
-    'soap': 'application/soap+xml',
-    'xml': 'application/xml',
-    'svg': 'image/svg+xml',
-    'css': 'text/css',
-    'csv': 'text/csv',
-    'html': 'text/html',
-    'vcf': 'text/vcard'
+    'txt'  : 'text/plain',
+    'json' : 'application/json',
+    'atom' : 'application/atom+xml',
+    'rss'  : 'application/rss+xml',
+    'soap' : 'application/soap+xml',
+    'xml'  : 'application/xml',
+    'svg'  : 'image/svg+xml',
+    'css'  : 'text/css',
+    'csv'  : 'text/csv',
+    'html' : 'text/html',
+    'vcf'  : 'text/vcard',
+    'gif'  : 'image/gif',
+    'jpeg' : 'image/jpeg',
+    'jpg'  : 'image/jpeg',
+    'png'  : 'image/png',
+    'tiff' : 'image/tiff',
+    'mp3'  : 'audio/mpeg',
+    'mp4'  : 'video/mpeg',
+    'mpeg' : 'video/mpeg',
+    'mpg'  : 'video/mpeg',
+    'm4a'  : 'audio/mp4',
+    'ogg'  : 'audio/ogg',
+    'oga'  : 'audio/ogg',
+    'webma': 'audio/webm',
+    'wav'  : 'audio/wav'
   };
-  url = data.url === undefined ? false : data.url;
-  method = data.method === undefined ? 'GET' : data.method.toUpperCase();
-  port = data.port === undefined ? urlparts.clean.port === undefined ? '80' : urlparts.clean.port : data.port;
-  type = data.type === undefined ? urlparts.clean.fileextension === undefined ? 'txt' : urlparts.clean.fileextension.toLowerCase() : data.type.toLowerCase();
+  url      = data.url === undefined ? false : data.url;
+  method   = data.method === undefined ? 'GET' : data.method.toUpperCase();
+  port     = data.port === undefined ? urlparts.clean.port === undefined ? '80' : urlparts.clean.port : data.port;
+  typed    = data.type === undefined ? urlparts.clean.fileextension === undefined ? 1 : 2 : 3;
+  typed    = data.mimetype === undefined ? typed : 4;
+  type     = data.type === undefined ? urlparts.clean.fileextension === undefined ? 'txt' : urlparts.clean.fileextension.toLowerCase() : data.type.toLowerCase();
   mimetype = data.mimetype === undefined ? mimes[urlparts.clean.fileextension] === undefined ? 'text/plain' : mimes[urlparts.clean.fileextension] : data.mimetype;
   senddata = data.data === undefined ? false : data.data;
   faildata = data.faildata === undefined ? false : data.faildata;
-  header = data.header === undefined ? {} : data.header;
+  header   = data.header === undefined ? {} : data.header;
+  
   if (header['Content-type'] === undefined) {
     header['Content-type'] = 'application/x-www-form-urlencoded';
   }
   if (method === 'DEBUG') {
     return {
-      "url": url,
-      "urlparts": urlparts.clean,
-      "port": port,
-      "type": type,
-      "mime": mimetype,
-      "data": data
+      "url"      : url,
+      "urlparts" : urlparts.clean,
+      "port"     : port,
+      "type"     : type,
+      "mime"     : mimetype,
+      "data"     : data
     };
   }
   ajax = (window.ActiveXObject) ? new ActiveXObject("Microsoft.XMLHTTP") : (XMLHttpRequest && new XMLHttpRequest()) || null;
@@ -97,7 +114,6 @@ majaX = function (data, successcallback, errorcallback) {
       } else {
         clearTimeout(ajaxTimeout);
         ajax.headersObject = majax.getRespHeaders(ajax.getAllResponseHeaders());
-        ajax = majax.cleanObject(ajax);
         if (method === 'API') {
           if (urlparts.clean.domain === 'github.com') {
             jsoncontent = JSON.parse(ajax.responseText);
@@ -109,13 +125,16 @@ majaX = function (data, successcallback, errorcallback) {
             }
           }
         } else {
-          if (type === 'json') {
+          if (typed <3) {
+            mimetype = ajax.headersObject['Content-Type'];
+          }
+          if (mimetype.indexOf('json') !== -1) {
             successcallback(JSON.parse(ajax.responseText), ajax);
-          } else if (type === 'xml') {
+          } else if (mimetype.indexOf('xml') !== -1) {
             successcallback(majax.getXMLasObject(ajax.responseText), ajax);
-          } else if (type === 'csv') {
+          } else if (mimetype.indexOf('csv') !== -1) {
             successcallback(majax.getCSVasArray(ajax.responseText), ajax);
-          } else if ((type === 'png') || (type === 'gif') || (type === 'jpg') || (type === 'jpeg') || (type === 'mp3') || (type === 'm4a')) {
+          } else if ((mimetype.indexOf('image') !== -1) || (mimetype.indexOf('video') !== -1) || (mimetype.indexOf('audio') !== -1) || (mimetype.indexOf('user-defined') !== -1)) {
             successcallback(ajax.response, ajax);
           } else {
             successcallback(ajax.responseText, ajax);
@@ -137,7 +156,7 @@ majaX = function (data, successcallback, errorcallback) {
   }
   if (method === 'API') {
     if (urlparts.clean.domain === 'github.com') {
-      type = 'json';
+      mimetype = 'json';
       if (urlparts.clean.path.split('/')[3] === undefined) {
         ajax.open('GET', 'https://api.github.com/repos/' + urlparts.clean.path.split('/')[1] + '/' + urlparts.clean.path.split('/')[2] + '/contents/', true);
         majax.setReqHeaders(ajax, header);
@@ -161,20 +180,20 @@ majaX = function (data, successcallback, errorcallback) {
 
     if (method === 'GET') {
       ajax.open('GET', url, true);
-      majax.overrideMime(ajax, type);
+      majax.overrideMime(ajax, mimetype);
       majax.setReqHeaders(ajax, header);
       ajax.send();
     } else if (method === 'POST') {
       ajax.open('POST', url, true);
-      majax.overrideMime(ajax, type);
+      majax.overrideMime(ajax, mimetype);
       majax.setReqHeaders(ajax, header);
       ajax.send(sendstring);
     } else {
       if (method === 'HEAD') {
-        type = 'none';
+        mimetype = 'none';
       }
       ajax.open(method, url, true);
-      majax.overrideMime(ajax, type);
+      majax.overrideMime(ajax, mimetype);
       majax.setReqHeaders(ajax, header);
       ajax.send();
     }
@@ -211,12 +230,12 @@ majax = {
     }
     return headerObject;
   },
-  overrideMime: function (ajax, type) {
+  overrideMime: function (ajax, mimetype) {
     "use strict";
-    if (type === 'xml') {
-      ajax.overrideMimeType('text/xml');
+    if (mimetype === 'application/xml') {
+      ajax.overrideMimeType(mimetype);
       ajax.responseType = '';
-    } else if ((type === 'png') || (type === 'gif') || (type === 'jpg') || (type === 'jpeg') || (type === 'mp3') || (type === 'm4a')) {
+    } else if ((mimetype.indexOf('image') !== -1) || (mimetype.indexOf('video') !== -1) || (mimetype.indexOf('audio') !== -1)) {
       ajax.overrideMimeType("text/plain; charset=x-user-defined");
       ajax.responseType = 'arraybuffer';
     }

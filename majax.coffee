@@ -3,10 +3,10 @@
 # *
 # * Copyright 2013, Simon Waldherr - http://simon.waldherr.eu/
 # * Released under the MIT Licence
-# * http://opensource.org/licenses/MIT
+# * http://simon.waldherr.eu/license/mit/
 # *
 # * Github:  https://github.com/simonwaldherr/majaX.js/
-# * Version: 0.2.3
+# * Version: 0.2.4
 #
 
 majaX = undefined
@@ -17,6 +17,7 @@ majaX = (data, successcallback, errorcallback) ->
   method = undefined
   port = undefined
   type = undefined
+  typed = undefined
   header = undefined
   faildata = undefined
   ajax = undefined
@@ -67,10 +68,26 @@ majaX = (data, successcallback, errorcallback) ->
     csv: "text/csv"
     html: "text/html"
     vcf: "text/vcard"
+    gif: "image/gif"
+    jpeg: "image/jpeg"
+    jpg: "image/jpeg"
+    png: "image/png"
+    tiff: "image/tiff"
+    mp3: "audio/mpeg"
+    mp4: "video/mpeg"
+    mpeg: "video/mpeg"
+    mpg: "video/mpeg"
+    m4a: "audio/mp4"
+    ogg: "audio/ogg"
+    oga: "audio/ogg"
+    webma: "audio/webm"
+    wav: "audio/wav"
 
   url = (if data.url is `undefined` then false else data.url)
   method = (if data.method is `undefined` then "GET" else data.method.toUpperCase())
   port = (if data.port is `undefined` then (if urlparts.clean.port is `undefined` then "80" else urlparts.clean.port) else data.port)
+  typed = (if data.type is `undefined` then (if urlparts.clean.fileextension is `undefined` then 1 else 2) else 3)
+  typed = (if data.mimetype is `undefined` then typed else 4)
   type = (if data.type is `undefined` then (if urlparts.clean.fileextension is `undefined` then "txt" else urlparts.clean.fileextension.toLowerCase()) else data.type.toLowerCase())
   mimetype = (if data.mimetype is `undefined` then (if mimes[urlparts.clean.fileextension] is `undefined` then "text/plain" else mimes[urlparts.clean.fileextension]) else data.mimetype)
   senddata = (if data.data is `undefined` then false else data.data)
@@ -100,7 +117,6 @@ majaX = (data, successcallback, errorcallback) ->
       else
         clearTimeout ajaxTimeout
         ajax.headersObject = majax.getRespHeaders(ajax.getAllResponseHeaders())
-        ajax = majax.cleanObject(ajax)
         if method is "API"
           if urlparts.clean.domain is "github.com"
             jsoncontent = JSON.parse(ajax.responseText)
@@ -110,13 +126,14 @@ majaX = (data, successcallback, errorcallback) ->
             else
               successcallback JSON.parse(ajax.responseText), ajax
         else
-          if type is "json"
+          mimetype = ajax.headersObject["Content-Type"]  if typed < 3
+          if mimetype.indexOf("json") isnt -1
             successcallback JSON.parse(ajax.responseText), ajax
-          else if type is "xml"
+          else if mimetype.indexOf("xml") isnt -1
             successcallback majax.getXMLasObject(ajax.responseText), ajax
-          else if type is "csv"
+          else if mimetype.indexOf("csv") isnt -1
             successcallback majax.getCSVasArray(ajax.responseText), ajax
-          else if (type is "png") or (type is "gif") or (type is "jpg") or (type is "jpeg") or (type is "mp3") or (type is "m4a")
+          else if (mimetype.indexOf("image") isnt -1) or (mimetype.indexOf("video") isnt -1) or (mimetype.indexOf("audio") isnt -1) or (mimetype.indexOf("user-defined") isnt -1)
             successcallback ajax.response, ajax
           else
             successcallback ajax.responseText, ajax
@@ -130,7 +147,7 @@ majaX = (data, successcallback, errorcallback) ->
       i++
   if method is "API"
     if urlparts.clean.domain is "github.com"
-      type = "json"
+      mimetype = "json"
       if urlparts.clean.path.split("/")[3] is `undefined`
         ajax.open "GET", "https://api.github.com/repos/" + urlparts.clean.path.split("/")[1] + "/" + urlparts.clean.path.split("/")[2] + "/contents/", true
         majax.setReqHeaders ajax, header
@@ -148,18 +165,18 @@ majaX = (data, successcallback, errorcallback) ->
           url = url + "?" + sendstring
     if method is "GET"
       ajax.open "GET", url, true
-      majax.overrideMime ajax, type
+      majax.overrideMime ajax, mimetype
       majax.setReqHeaders ajax, header
       ajax.send()
     else if method is "POST"
       ajax.open "POST", url, true
-      majax.overrideMime ajax, type
+      majax.overrideMime ajax, mimetype
       majax.setReqHeaders ajax, header
       ajax.send sendstring
     else
-      type = "none"  if method is "HEAD"
+      mimetype = "none"  if method is "HEAD"
       ajax.open method, url, true
-      majax.overrideMime ajax, type
+      majax.overrideMime ajax, mimetype
       majax.setReqHeaders ajax, header
       ajax.send()
 
@@ -188,12 +205,12 @@ majax =
         i++
     headerObject
 
-  overrideMime: (ajax, type) ->
+  overrideMime: (ajax, mimetype) ->
     "use strict"
-    if type is "xml"
-      ajax.overrideMimeType "text/xml"
+    if mimetype is "application/xml"
+      ajax.overrideMimeType mimetype
       ajax.responseType = ""
-    else if (type is "png") or (type is "gif") or (type is "jpg") or (type is "jpeg") or (type is "mp3") or (type is "m4a")
+    else if (mimetype.indexOf("image") isnt -1) or (mimetype.indexOf("video") isnt -1) or (mimetype.indexOf("audio") isnt -1)
       ajax.overrideMimeType "text/plain; charset=x-user-defined"
       ajax.responseType = "arraybuffer"
 
