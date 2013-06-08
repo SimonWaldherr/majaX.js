@@ -162,7 +162,11 @@ majaX = function (data, successcallback, errorcallback) {
   if (method === 'API') {
     if (urlparts.clean.domain === 'github.com') {
       mimetype = 'json';
-      if (urlparts.clean.path.split('/')[3] === undefined) {
+      if (urlparts.clean.path.split('/')[2] === undefined) {
+        ajax.open('GET', 'https://api.github.com/users/' + urlparts.clean.path.split('/')[1] + '/repos', true);
+        majax.setReqHeaders(ajax, header);
+        ajax.send();
+      } else if (urlparts.clean.path.split('/')[3] === undefined) {
         ajax.open('GET', 'https://api.github.com/repos/' + urlparts.clean.path.split('/')[1] + '/' + urlparts.clean.path.split('/')[2] + '/contents/', true);
         majax.setReqHeaders(ajax, header);
         ajax.send();
