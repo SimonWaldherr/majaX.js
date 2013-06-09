@@ -6,7 +6,7 @@
 # * http://simon.waldherr.eu/license/mit/
 # *
 # * Github:  https://github.com/simonwaldherr/majaX.js/
-# * Version: 0.2.4
+# * Version: 0.2.5
 #
 
 majaX = undefined
@@ -54,7 +54,7 @@ majaX = (data, successcallback, errorcallback) ->
       urlparts.clean.path += (if urlparts.regex[i] is `undefined` then false else urlparts.regex[i])
     else
       urlparts.clean.query += (if urlparts.regex[i] is `undefined` then false else urlparts.regex[i])
-    i++
+    i += 1
   urlparts.clean.fileextension = urlparts.clean.path.split(".")[urlparts.clean.path.split(".").length - 1]  if urlparts.clean.path.indexOf(".") isnt -1
   mimes =
     txt: "text/plain"
@@ -89,7 +89,7 @@ majaX = (data, successcallback, errorcallback) ->
   typed = (if data.type is `undefined` then (if urlparts.clean.fileextension is `undefined` then 1 else 2) else 3)
   typed = (if data.mimetype is `undefined` then typed else 4)
   type = (if data.type is `undefined` then (if urlparts.clean.fileextension is `undefined` then "txt" else urlparts.clean.fileextension.toLowerCase()) else data.type.toLowerCase())
-  mimetype = (if data.mimetype is `undefined` then (if mimes[urlparts.clean.fileextension] is `undefined` then "text/plain" else mimes[urlparts.clean.fileextension]) else data.mimetype)
+  mimetype = (if data.mimetype is `undefined` then (if mimes[urlparts.clean.fileextension] is `undefined` then (if mimes[type] is `undefined` then "text/plain" else mimes[type]) else mimes[urlparts.clean.fileextension]) else data.mimetype)
   senddata = (if data.data is `undefined` then false else data.data)
   faildata = (if data.faildata is `undefined` then false else data.faildata)
   header = (if data.header is `undefined` then {} else data.header)
@@ -142,13 +142,18 @@ majaX = (data, successcallback, errorcallback) ->
   sendstring = ""
   if senddata isnt false
     for sendkeys of senddata
-      sendstring += "&"  if i isnt 0
-      sendstring += sendkeys + "=" + senddata[sendkeys]
-      i++
+      if typeof senddata[sendkeys] is "string"
+        sendstring += "&"  if i isnt 0
+        sendstring += sendkeys + "=" + senddata[sendkeys]
+        i += 1
   if method is "API"
     if urlparts.clean.domain is "github.com"
       mimetype = "json"
-      if urlparts.clean.path.split("/")[3] is `undefined`
+      if urlparts.clean.path.split("/")[2] is `undefined`
+        ajax.open "GET", "https://api.github.com/users/" + urlparts.clean.path.split("/")[1] + "/repos", true
+        majax.setReqHeaders ajax, header
+        ajax.send()
+      else if urlparts.clean.path.split("/")[3] is `undefined`
         ajax.open "GET", "https://api.github.com/repos/" + urlparts.clean.path.split("/")[1] + "/" + urlparts.clean.path.split("/")[2] + "/contents/", true
         majax.setReqHeaders ajax, header
         ajax.send()
@@ -202,7 +207,7 @@ majax =
         if typeof string[i] is "string"
           header = string[i].split(": ")
           headerObject[header[0].trim()] = header[1].trim()  if (header[0].length > 3) and (header[1].length > 3)
-        i++
+        i += 1
     headerObject
 
   overrideMime: (ajax, mimetype) ->
@@ -249,17 +254,18 @@ majax =
       if node.childNodes[i].localName isnt null
         element[ii] = {}
         for key of node.childNodes[i]
-          obj = node.childNodes[i][key]
-          if (typeof obj is "string") or (typeof obj is "number")
-            if (key isnt "accessKey") and (key isnt "baseURI") and (key isnt "className") and (key isnt "contentEditable") and (key isnt "dir") and (key isnt "namespaceURI") and (obj isnt "") and (key isnt key.toUpperCase()) and (obj isnt 0) and (key isnt "childs") and (key isnt "textContent") and (key isnt "nodeType") and (key isnt "tabIndex") and (key isnt "innerHTML") and (key isnt "outerHTML")
-              element[ii][key] = obj
-            else element[ii][key] = majax.escapeHtmlEntities(obj)  if (key is "innerHTML") or (key is "outerHTML")
+          if node.childNodes[i][key] isnt `undefined`
+            if (typeof node.childNodes[i][key] is "string") or (typeof node.childNodes[i][key] is "number")
+              obj = node.childNodes[i][key]
+              if (key isnt "accessKey") and (key isnt "baseURI") and (key isnt "className") and (key isnt "contentEditable") and (key isnt "dir") and (key isnt "namespaceURI") and (obj isnt "") and (key isnt key.toUpperCase()) and (obj isnt 0) and (key isnt "childs") and (key isnt "textContent") and (key isnt "nodeType") and (key isnt "tabIndex") and (key isnt "innerHTML") and (key isnt "outerHTML")
+                element[ii][key] = obj
+              else element[ii][key] = majax.escapeHtmlEntities(obj)  if (key is "innerHTML") or (key is "outerHTML")
         if node.childNodes[i].innerHTML isnt `undefined`
           plaintext = majax.getText(node.childNodes[i].innerHTML).trim()
           element[ii].textContent = plaintext  if plaintext isnt ""
           element[ii].childs = majax.returnChilds(returnArray, node.childNodes[i], deep + 1)  if node.childNodes[i].childNodes.length > 1
-          ii++
-      i++
+          ii += 1
+      i += 1
     element
 
   isEmpty: (obj) ->
@@ -281,7 +287,7 @@ majax =
       else if typeof actual[i] is "object"
         clean = majax.cleanArray(actual[i])
         newArray.push majax.cleanArray(actual[i])  if clean[0] isnt ""
-      i++
+      i += 1
     newArray
 
   cleanObject: (actual) ->
@@ -289,9 +295,10 @@ majax =
     newArray = {}
     key = undefined
     for key of actual
-      if (typeof actual[key] isnt "object") and (typeof actual[key] isnt "function") and (typeof actual[key] isnt "") and (not majax.isEmpty(actual[key]))
-        newArray[key] = actual[key]
-      else newArray[key] = majax.cleanObject(actual[key])  if (not majax.isEmpty(majax.cleanObject(actual[key]))) and (actual[key] isnt null)  if typeof actual[key] is "object"
+      if actual[key] isnt `undefined`
+        if (typeof actual[key] isnt "object") and (typeof actual[key] isnt "function") and (typeof actual[key] isnt "") and (not majax.isEmpty(actual[key]))
+          newArray[key] = actual[key]
+        else newArray[key] = majax.cleanObject(actual[key])  if (not majax.isEmpty(majax.cleanObject(actual[key]))) and (actual[key] isnt null)  if typeof actual[key] is "object"
     newArray
 
   getCSVasArray: (csvstring) ->
@@ -330,9 +337,12 @@ majax =
       y = undefined
       z = undefined
       while i < s.length
-        x = s.charCodeAt(i++)
-        y = s.charCodeAt(i++)
-        z = s.charCodeAt(i++)
+        i += 1
+        x = s.charCodeAt(i)
+        i += 1
+        y = s.charCodeAt(i)
+        i += 1
+        z = s.charCodeAt(i)
         a = x >> 2
         b = ((x & 3) << 4) | (y >> 4)
         c = ((y & 15) << 2) | (z >> 6)
@@ -359,10 +369,14 @@ majax =
       z = undefined
       s = s.replace(/[^A-Za-z0-9\+\/\=]/g, "")
       while i < s.length
-        a = m.indexOf(s.charAt(i++))
-        b = m.indexOf(s.charAt(i++))
-        c = m.indexOf(s.charAt(i++))
-        d = m.indexOf(s.charAt(i++))
+        i += 1
+        a = m.indexOf(s.charAt(i))
+        i += 1
+        b = m.indexOf(s.charAt(i))
+        i += 1
+        c = m.indexOf(s.charAt(i))
+        i += 1
+        d = m.indexOf(s.charAt(i))
         x = (a << 2) | (b >> 4)
         y = ((b & 15) << 4) | (c >> 2)
         z = ((c & 3) << 6) | d

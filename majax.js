@@ -6,7 +6,7 @@
  * http://simon.waldherr.eu/license/mit/
  *
  * Github:  https://github.com/simonwaldherr/majaX.js/
- * Version: 0.2.4
+ * Version: 0.2.5
  */
 
 /*jslint browser: true, white: true, indent: 2, bitwise: true, regexp: true */
@@ -86,7 +86,7 @@ majaX = function (data, successcallback, errorcallback) {
   typed    = data.type === undefined ? urlparts.clean.fileextension === undefined ? 1 : 2 : 3;
   typed    = data.mimetype === undefined ? typed : 4;
   type     = data.type === undefined ? urlparts.clean.fileextension === undefined ? 'txt' : urlparts.clean.fileextension.toLowerCase() : data.type.toLowerCase();
-  mimetype = data.mimetype === undefined ? mimes[urlparts.clean.fileextension] === undefined ? 'text/plain' : mimes[urlparts.clean.fileextension] : data.mimetype;
+  mimetype = data.mimetype === undefined ? mimes[urlparts.clean.fileextension] === undefined ? mimes[type] === undefined ? 'text/plain' : mimes[type] : mimes[urlparts.clean.fileextension] : data.mimetype;
   senddata = data.data === undefined ? false : data.data;
   faildata = data.faildata === undefined ? false : data.faildata;
   header   = data.header === undefined ? {} : data.header;
