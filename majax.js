@@ -6,7 +6,7 @@
  * http://simon.waldherr.eu/license/mit/
  *
  * Github:  https://github.com/simonwaldherr/majaX.js/
- * Version: 0.2.5
+ * Version: 0.2.6
  */
 
 /*jslint browser: true, white: true, indent: 2, bitwise: true, regexp: true */
@@ -90,6 +90,8 @@ majaX = function (data, successcallback, errorcallback) {
   senddata = data.data === undefined ? false : data.data;
   faildata = data.faildata === undefined ? false : data.faildata;
   header   = data.header === undefined ? {} : data.header;
+  successcallback = data.success !== undefined ? data.success : successcallback;
+  errorcallback   = data.error !== undefined ? data.error : errorcallback;
 
   if (header['Content-type'] === undefined) {
     header['Content-type'] = 'application/x-www-form-urlencoded';
@@ -112,11 +114,11 @@ majaX = function (data, successcallback, errorcallback) {
     var jsoncontent, status;
     if (ajax.readyState === 4) {
       status = ajax.status.toString().charAt(0);
+      clearTimeout(ajaxTimeout);
+      ajax.headersObject = majax.getRespHeaders(ajax.getAllResponseHeaders());
       if ((status !== '2') && (status !== '3')) {
         errorcallback(faildata, ajax);
       } else {
-        clearTimeout(ajaxTimeout);
-        ajax.headersObject = majax.getRespHeaders(ajax.getAllResponseHeaders());
         if (method === 'API') {
           if (urlparts.clean.domain === 'github.com') {
             jsoncontent = JSON.parse(ajax.responseText);
@@ -127,6 +129,8 @@ majaX = function (data, successcallback, errorcallback) {
               successcallback(JSON.parse(ajax.responseText), ajax);
             }
           }
+        } else if (method === 'HEAD') {
+          successcallback(ajax.responseText, ajax);
         } else {
           if (typed < 3) {
             mimetype = ajax.headersObject['Content-Type'];

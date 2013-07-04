@@ -1,0 +1,31 @@
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>majaX.js</title>
+  <link href="./../style.css" rel="stylesheet" type="text/css">
+  <script src="./../majax.js"></script>
+</head>
+<body>
+  <h1>majaX.js</h1>
+  <h2>HEAD <small>should work</small></h2>
+  <div class="return" id="head0"></div><hr/>
+  <h2>HEAD <small>should work, but with no content</small></h2>
+  <div class="return" id="head1"></div><hr/>
+  <h2>HEAD <small>not allowed by Access-Control-Allow-Origin</small></h2>
+  <div class="return" id="head2"></div><hr/>
+  <h2>HEAD <small>target (Server) does not exist</small></h2>
+  <div class="return" id="head3"></div><hr/>
+  <h2>HEAD <small>target (File (404 by PHP)) does not exist</small></h2>
+  <div class="return" id="head4"></div><hr/>
+  <h2>HEAD <small>target (File) does not exist</small></h2>
+  <div class="return" id="head5"></div><hr/>
+</body>
+<script>
+  majaX({url:'http://cdn.simon.waldherr.eu/projects/majaX/content/server.php',method:'HEAD'}, function(json, full) {document.getElementById('head0').innerHTML = JSON.stringify(full, null, '  ')}, function(json, full) {document.getElementById('head0').innerHTML = JSON.stringify(full, null, '  ')});
+  majaX({url:'http://cdn.simon.waldherr.eu/projects/majaX/content/server.php?hc=204',method:'HEAD'}, function(json, full) {document.getElementById('head1').innerHTML = JSON.stringify(full, null, '  ')}, function(json, full) {document.getElementById('head1').innerHTML = JSON.stringify(full, null, '  ')});
+  majaX({url:'https://raw.github.com/SimonWaldherr/majaX.js/master/majax.js',method:'HEAD'}, function(json, full) {document.getElementById('head2').innerHTML = JSON.stringify(full, null, '  ')}, function(json, full) {document.getElementById('head2').innerHTML = JSON.stringify(full, null, '  ')});
+  majaX({url:'http://example.tld/404.html',method:'HEAD'}, function(json, full) {document.getElementById('head3').innerHTML = JSON.stringify(full, null, '  ')}, function(json, full) {document.getElementById('head3').innerHTML = JSON.stringify(full, null, '  ')});
+  majaX({url:'http://cdn.simon.waldherr.eu/projects/majaX/content/server.php?hc=404',method:'HEAD'}, function(json, full) {document.getElementById('head4').innerHTML = JSON.stringify(full, null, '  ')}, function(json, full) {document.getElementById('head4').innerHTML = JSON.stringify(full, null, '  ')});
+  majaX({url:'http://cdn.simon.waldherr.eu/projects/majaX/content/404.html',method:'HEAD'}, function(json, full) {document.getElementById('head5').innerHTML = JSON.stringify(full, null, '  ')}, function(json, full) {document.getElementById('head5').innerHTML = JSON.stringify(full, null, '  ')});
+</script>
+</html>

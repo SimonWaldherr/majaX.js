@@ -6,8 +6,8 @@
 # * http://simon.waldherr.eu/license/mit/
 # *
 # * Github:  https://github.com/simonwaldherr/majaX.js/
-# * Version: 0.2.5
-#
+# * Version: 0.2.6
+# 
 
 majaX = undefined
 majax = undefined
@@ -93,6 +93,8 @@ majaX = (data, successcallback, errorcallback) ->
   senddata = (if data.data is `undefined` then false else data.data)
   faildata = (if data.faildata is `undefined` then false else data.faildata)
   header = (if data.header is `undefined` then {} else data.header)
+  successcallback = (if data.success isnt `undefined` then data.success else successcallback)
+  errorcallback = (if data.error isnt `undefined` then data.error else errorcallback)
   header["Content-type"] = "application/x-www-form-urlencoded"  if header["Content-type"] is `undefined`
   if method is "DEBUG"
     return (
@@ -112,11 +114,11 @@ majaX = (data, successcallback, errorcallback) ->
     status = undefined
     if ajax.readyState is 4
       status = ajax.status.toString().charAt(0)
+      clearTimeout ajaxTimeout
+      ajax.headersObject = majax.getRespHeaders(ajax.getAllResponseHeaders())
       if (status isnt "2") and (status isnt "3")
         errorcallback faildata, ajax
       else
-        clearTimeout ajaxTimeout
-        ajax.headersObject = majax.getRespHeaders(ajax.getAllResponseHeaders())
         if method is "API"
           if urlparts.clean.domain is "github.com"
             jsoncontent = JSON.parse(ajax.responseText)
@@ -125,6 +127,8 @@ majaX = (data, successcallback, errorcallback) ->
               successcallback jsoncontent, ajax
             else
               successcallback JSON.parse(ajax.responseText), ajax
+        else if method is "HEAD"
+          successcallback ajax.responseText, ajax
         else
           mimetype = ajax.headersObject["Content-Type"]  if typed < 3
           if mimetype.indexOf("json") isnt -1
