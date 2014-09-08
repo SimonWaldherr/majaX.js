@@ -213,6 +213,10 @@ majaX = function (data, successcallback, errorcallback) {
   }
 };
 
+if (module) {
+  module.exports = majaX
+}
+
 majax = {
   setReqHeaders: function (ajax, headerObject) {
     "use strict";
