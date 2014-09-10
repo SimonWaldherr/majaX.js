@@ -213,7 +213,7 @@ majaX = function (data, successcallback, errorcallback) {
   }
 };
 
-if (module) {
+if ('undefined' !== typeof module) {
   module.exports = majaX
 }
 
