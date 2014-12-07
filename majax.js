@@ -153,13 +153,17 @@ majaX = function (data, successcallback, errorcallback) {
   i = 0;
   sendstring = '';
   if (senddata !== false) {
-    for (sendkeys in senddata) {
-      if (typeof senddata[sendkeys] === 'string') {
-        if (i !== 0) {
-          sendstring += '&';
+    if ('string' === typeof senddata) {
+      sendstring = senddata
+    } else {
+      for (sendkeys in senddata) {
+        if (typeof senddata[sendkeys] === 'string') {
+          if (i !== 0) {
+            sendstring += '&';
+          }
+          sendstring += sendkeys + '=' + senddata[sendkeys];
+          i += 1;
         }
-        sendstring += sendkeys + '=' + senddata[sendkeys];
-        i += 1;
       }
     }
   }
@@ -212,6 +216,10 @@ majaX = function (data, successcallback, errorcallback) {
     }
   }
 };
+
+if ('undefined' !== typeof module) {
+  module.exports = majaX
+}
 
 majax = {
   setReqHeaders: function (ajax, headerObject) {
